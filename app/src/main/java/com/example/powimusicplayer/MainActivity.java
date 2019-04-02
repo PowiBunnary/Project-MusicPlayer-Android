@@ -1,14 +1,17 @@
 package com.example.powimusicplayer;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -25,7 +28,7 @@ import DTOs.Song;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     MediaPlayer mediaPlayer;
-    Button toggle, next, prev, stop;
+    ImageButton toggle, next, prev, stop;
     TextView songTitle, songDuration, timer;
     SeekBar songProgress;
     ArrayList<Song> songList;
@@ -56,10 +59,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         songTitle = (TextView) findViewById(R.id.CurrentTitle);
         songDuration = (TextView) findViewById(R.id.SongLength);
         timer = (TextView) findViewById(R.id.StartTimer);
-        toggle = (Button) findViewById(R.id.ToggleButton);
-        next = (Button) findViewById(R.id.NextButton);
-        prev = (Button) findViewById(R.id.PrevButton);
-        stop = (Button) findViewById(R.id.StopButton);
+        toggle = (ImageButton) findViewById(R.id.ToggleButton);
+        next = (ImageButton) findViewById(R.id.NextButton);
+        prev = (ImageButton) findViewById(R.id.PrevButton);
+        stop = (ImageButton) findViewById(R.id.StopButton);
         songProgress = (SeekBar) findViewById(R.id.SongProgress);
 
         prepareSong();
@@ -107,11 +110,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (mediaPlayer.isPlaying()){
                     mediaPlayer.pause();
                     mSeekbarUpdateHandler.removeCallbacks(mUpdateSeekbar);
-                    toggle.setText("Play");
+                    toggle.setBackgroundResource(R.drawable.ic_play_button);
                 }
                 else {
                     playSong();
-                    toggle.setText("Pause");
+                    toggle.setBackgroundResource(R.drawable.ic_pause_button);
                 }
                 break;
             case R.id.NextButton:
@@ -147,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.StopButton:
                     mediaPlayer.stop();
                     prepareSong();
-                    toggle.setText("Play");
+                    toggle.setBackgroundResource(R.drawable.ic_play_button);
                     updateTimer();
                     songProgress.setProgress(0);
                 break;

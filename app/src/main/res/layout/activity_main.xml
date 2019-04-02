@@ -6,48 +6,52 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+
     <LinearLayout
+        android:id="@+id/ControlContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/ControlContainer"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="20dp"
+        android:layout_marginBottom="29dp"
         android:gravity="center">
 
-        <Button
+        <ImageButton
             android:id="@+id/PrevButton"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="Previous" />
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginRight="25dp"
+            android:background="@drawable/ic_back_button" />
 
-        <Button
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="play"
-            android:id="@+id/ToggleButton" />
+        <ImageButton
+            android:id="@+id/ToggleButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginRight="25dp"
+            android:background="@drawable/ic_play_button" />
 
-        <Button
+        <ImageButton
             android:id="@+id/StopButton"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="Stop" />
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginRight="25dp"
+            android:background="@drawable/ic_stop_button" />
 
-        <Button
+        <ImageButton
             android:id="@+id/NextButton"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:text="Next" />
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/ic_next_button" />
     </LinearLayout>
 
 
     <SeekBar
+        android:id="@+id/SongProgress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp"
         android:layout_alignBottom="@id/ControlContainer"
-        android:layout_marginBottom="112dp"
-        android:id="@+id/SongProgress"/>
+        android:layout_marginBottom="103dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -78,4 +82,5 @@
         android:layout_marginBottom="24dp"
         android:layout_marginLeft="12dp"
         android:id="@+id/CurrentTitle"/>
+
 </RelativeLayout>
