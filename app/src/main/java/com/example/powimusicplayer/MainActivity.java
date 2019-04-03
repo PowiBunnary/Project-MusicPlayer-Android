@@ -1,11 +1,15 @@
 package com.example.powimusicplayer;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -34,6 +38,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ArrayList<Song> songList;
     int position, maxPos;
 
+    NotificationManagerCompat notificationManager;
+    Notification musicNotification;
+    public final String CHANNEL_ID = "MUSIC_CHANNEL";
+    public final int MUSIC_ID = 0;
+
+
     //for the seekbar
     private Handler mSeekbarUpdateHandler = new Handler();
     private Runnable mUpdateSeekbar = new Runnable() {
@@ -47,10 +57,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
+    private void createNotification(String songName, String songAuthor) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        musicNotification = builder
+                            .setAutoCancel(false)
+                            .setSmallIcon(R.drawable.logo)
+                            .setContentTitle(songName)
+                            .setContentText(songAuthor)
+                            .build();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        notificationManager = NotificationManagerCompat.from(this);
 
         songList = new ArrayList<Song>();
         setSongList();
@@ -153,6 +174,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     toggle.setBackgroundResource(R.drawable.ic_play_button);
                     updateTimer();
                     songProgress.setProgress(0);
+                    notificationManager.cancel(MUSIC_ID);
                 break;
 
         }
@@ -191,6 +213,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mediaPlayer.start();
 
         mSeekbarUpdateHandler.postDelayed(mUpdateSeekbar, 500);
+
+        // Create a notification
+        // Need adding 1 more field to Song object: author/singer name
+        createNotification(songList.get(position).getName(), songList.get(position).getName());
+        notificationManager.notify(MUSIC_ID, musicNotification);
 
         //change to next song if a song is completed
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
