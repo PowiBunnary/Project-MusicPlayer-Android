@@ -4,17 +4,21 @@ import android.content.Intent;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import DTOs.Song;
@@ -49,8 +53,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        songList = new ArrayList<Song>();
-        setSongList();
+        mediaPlayer = new MediaPlayer();
+
+        songList = getPlayList(Environment.getExternalStorageDirectory().toString());
+        maxPos = songList.size() - 1;
+        //setSongList();
         position = 0;
 
         songTitle = (TextView) findViewById(R.id.CurrentTitle);
@@ -119,12 +126,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (mediaPlayer.isPlaying()){
                     //if song's still playing
                     mediaPlayer.stop();
+                    mediaPlayer.reset();
                     prepareSong();
                     playSong();
                 }
                 //if nothing's touched yet
                 else {
                     songProgress.setProgress(0);
+                    mediaPlayer.reset();
                     prepareSong();
                 }
                 break;
@@ -135,17 +144,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (mediaPlayer.isPlaying()){
                     //if song's still playing
                     mediaPlayer.stop();
+                    mediaPlayer.reset();
                     prepareSong();
                     playSong();
                 }
                 //if nothing's touched yet
                 else {
                     songProgress.setProgress(0);
+                    mediaPlayer.reset();
                     prepareSong();
                 }
                 break;
             case R.id.StopButton:
                     mediaPlayer.stop();
+                    mediaPlayer.reset();
                     prepareSong();
                     toggle.setText("Play");
                     updateTimer();
@@ -155,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    protected void setSongList(){
+    /*protected void setSongList(){
         songList.add(new Song("Silent Story", R.raw.silent_story));
         songList.add(new Song("Flamingo", R.raw.flamingo));
         songList.add(new Song("Flower Dance", R.raw.flower_dance));
@@ -163,12 +175,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         songList.add(new Song("Give It Up", R.raw.give_it_up));
         //Collections.sort(songList,String.CASE_INSENSITIVE_ORDER);
         maxPos = songList.size() - 1;
+    }*/
+
+    protected ArrayList<Song> getPlayList(String rootPath) {
+        ArrayList<Song> fileList = new ArrayList<Song>();
+        try {
+            File rootFolder = new File(rootPath);
+            File[] files = rootFolder.listFiles(); //here you will get NPE if directory doesn't contains  any file,handle it like this.
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    if (getPlayList(file.getAbsolutePath()) != null) {
+                        fileList.addAll(getPlayList(file.getAbsolutePath()));
+                    } else {
+                        break;
+                    }
+                } else if (file.getName().endsWith(".mp3")) {
+                    Song song = new Song(file.getName(),file.getAbsolutePath());
+                    //song.put("file_path", file.getAbsolutePath());
+                    //song.put("file_name", file.getName());
+                    fileList.add(song);
+                }
+            }
+            return fileList;
+        } catch (RuntimeException e) {
+            throw e;
+        }
     }
 
     protected void prepareSong(){
         String str = "Current playing: ";
-        mediaPlayer = MediaPlayer.create(MainActivity.this, songList.get(position).getFile());
-        songTitle.setText(str + songList.get(position).getName());
+        String sub = songList.get(position).getName();
+
+        if(str.length()>4) {
+            sub = sub.substring(0, sub.length() - 4);
+        }
+
+        //mediaPlayer = MediaPlayer.create(MainActivity.this, songList.get(position).getFile());
+        try {
+            mediaPlayer.setDataSource(songList.get(position).getPath());
+            mediaPlayer.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        songTitle.setText(str + sub);
 
         songProgress.setMax(mediaPlayer.getDuration());
         int duration = mediaPlayer.getDuration();
@@ -194,6 +243,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onCompletion(MediaPlayer mp) {
                 mediaPlayer.stop();
+                mediaPlayer.reset();
                 changeNextPos();
                 prepareSong();
                 try {

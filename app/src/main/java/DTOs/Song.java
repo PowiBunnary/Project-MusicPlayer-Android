@@ -1,18 +1,12 @@
 package DTOs;
 
 public class Song {
-    private String name;
-    private  int file, duration;
+    private String name, path;
+    private int duration;
 
-    public Song(String name, int file) {
+    public Song(String name, String path) {
         this.name = name;
-        this.file = file;
-    }
-
-    public Song(String name, int file, int duration) {
-        this.name = name;
-        this.file = file;
-        this.duration = duration;
+        this.path = path;
     }
 
     public String getName() {
@@ -23,12 +17,12 @@ public class Song {
         this.name = name;
     }
 
-    public int getFile() {
-        return file;
+    public String getPath() {
+        return path;
     }
 
-    public void setFile(int file) {
-        this.file = file;
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public int getDuration() {
