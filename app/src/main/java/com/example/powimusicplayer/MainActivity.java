@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.media.session.MediaSession;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
@@ -16,6 +17,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -43,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public final String CHANNEL_ID = "MUSIC_CHANNEL";
     public final int MUSIC_ID = 0;
 
-
     //for the seekbar
     private Handler mSeekbarUpdateHandler = new Handler();
     private Runnable mUpdateSeekbar = new Runnable() {
@@ -57,13 +58,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    private void createNotification(String songName, String songAuthor) {
+    private void createNotification(String songName, String songAuthor, int toggleIconSrc) {
+        Intent backIntent = new Intent(this, MusicPlayerService.class);
+        PendingIntent pIntent = PendingIntent.getService(
+                this,
+                MUSIC_ID,
+                backIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT);
+
+        RemoteViews view = new RemoteViews(getPackageName(), R.layout.custom_notification);
+        view.setTextViewText(R.id.notification_song_title, songName);
+        view.setTextViewText(R.id.notification_song_author, songAuthor);
+        view.setImageViewResource(R.id.notification_toggle, toggleIconSrc);
+        view.setOnClickPendingIntent(R.id.notification_back, pIntent);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         musicNotification = builder
-                            .setAutoCancel(false)
                             .setSmallIcon(R.drawable.logo)
-                            .setContentTitle(songName)
-                            .setContentText(songAuthor)
+                            .setCustomContentView(view)
+                            .setOngoing(true)
                             .build();
     }
 
@@ -101,7 +114,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 int trackingPos = seekBar.getProgress();
-                String trackTime = String.format("%2d:%02d", TimeUnit.MILLISECONDS.toMinutes(trackingPos), TimeUnit.MILLISECONDS.toSeconds(trackingPos) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(trackingPos)));
+                String trackTime = String.format("%2d:%02d",
+                        TimeUnit.MILLISECONDS.toMinutes(trackingPos),
+                        TimeUnit.MILLISECONDS.toSeconds(trackingPos) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(trackingPos)));
                 timer.setText(trackTime);
             }
 
@@ -216,7 +232,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Create a notification
         // Need adding 1 more field to Song object: author/singer name
-        createNotification(songList.get(position).getName(), songList.get(position).getName());
+        createNotification(
+                songList.get(position).getName(),
+                songList.get(position).getName(),
+                R.drawable.ic_pause_button);
         notificationManager.notify(MUSIC_ID, musicNotification);
 
         //change to next song if a song is completed

@@ -21,6 +21,7 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize" />
+        <service android:name=".MusicPlayerService"></service>
     </application>
 
 </manifest>

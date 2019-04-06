@@ -12,34 +12,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="29dp"
-        android:gravity="center">
+        android:layout_marginBottom="35dp"
+        android:gravity="center_horizontal">
 
         <ImageButton
             android:id="@+id/PrevButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginRight="25dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginRight="40dp"
             android:background="@drawable/ic_back_button" />
 
         <ImageButton
             android:id="@+id/ToggleButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginRight="25dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginRight="40dp"
             android:background="@drawable/ic_play_button" />
 
         <ImageButton
             android:id="@+id/StopButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginRight="25dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginRight="40dp"
             android:background="@drawable/ic_stop_button" />
 
         <ImageButton
             android:id="@+id/NextButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:background="@drawable/ic_next_button" />
     </LinearLayout>
 
@@ -49,7 +49,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@id/ControlContainer"
-        android:layout_marginBottom="103dp"
+        android:layout_marginBottom="84dp"
         android:paddingLeft="20dp"
         android:paddingRight="20dp" />
 
