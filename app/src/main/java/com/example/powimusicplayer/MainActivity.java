@@ -1,25 +1,22 @@
 package com.example.powimusicplayer;
 
-import android.content.Intent;
-import android.graphics.drawable.Drawable;
-import android.media.MediaMetadataRetriever;
+import android.databinding.DataBindingUtil;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import java.io.IOException;
+import com.example.powimusicplayer.databinding.ActivityMainBinding;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import Binders.SeekBarModel;
+import Binders.SongNameModel;
 import DTOs.Song;
 
 //nox_adb.exe connect 127.0.0.1:62001 -- use Nox emulator instead, remember to turn on Nox first.
@@ -36,21 +33,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //for the seekbar
     private Handler mSeekbarUpdateHandler = new Handler();
-    private Runnable mUpdateSeekbar = new Runnable() {
-        @Override
-        public void run() {
-            int currentPos = mediaPlayer.getCurrentPosition();
+    private Runnable mUpdateSeekbar;
 
-            updateTimer();
-            songProgress.setProgress(currentPos);
-            mSeekbarUpdateHandler.postDelayed(this, 50);
-        }
-    };
+    //DataBinder
+    ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+
+        mUpdateSeekbar  = new Runnable() {
+            @Override
+            public void run() {
+                int currentPos = mediaPlayer.getCurrentPosition();
+                binding.setSeekModel(new SeekBarModel(currentPos));
+                mSeekbarUpdateHandler.postDelayed(this, 50);
+            }
+        };
 
         songList = new ArrayList<Song>();
         setSongList();
@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         playSong();
         mediaPlayer.pause();
         mSeekbarUpdateHandler.removeCallbacks(mUpdateSeekbar);
-        mediaPlayer.seekTo(0);
+        binding.setSeekModel(new SeekBarModel(0));
 
         toggle.setOnClickListener(this);
         next.setOnClickListener(this);
@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mSeekbarUpdateHandler.postDelayed(mUpdateSeekbar,500);
 
                 mediaPlayer.seekTo(seekBar.getProgress());
-                updateTimer();
+                binding.setSeekModel(new SeekBarModel(mediaPlayer.getCurrentPosition()));
 
             }
         });
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 //if nothing's touched yet
                 else {
-                    songProgress.setProgress(0);
+                    binding.setSeekModel(new SeekBarModel(0));
                     prepareSong();
                 }
                 break;
@@ -143,16 +143,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 //if nothing's touched yet
                 else {
-                    songProgress.setProgress(0);
+                    binding.setSeekModel(new SeekBarModel(0));
                     prepareSong();
                 }
                 break;
             case R.id.StopButton:
-                    mediaPlayer.stop();
-                    prepareSong();
-                    toggle.setBackgroundResource(R.drawable.ic_play_button);
-                    updateTimer();
-                    songProgress.setProgress(0);
+                mediaPlayer.stop();
+                prepareSong();
+                toggle.setBackgroundResource(R.drawable.ic_play_button);
+                binding.setSeekModel(new SeekBarModel(0));
                 break;
 
         }
@@ -164,20 +163,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         songList.add(new Song("Flower Dance", R.raw.flower_dance));
         songList.add(new Song("Faith", R.raw.faith));
         songList.add(new Song("Give It Up", R.raw.give_it_up));
-        //Collections.sort(songList,String.CASE_INSENSITIVE_ORDER);
         maxPos = songList.size() - 1;
     }
 
     protected void prepareSong(){
-        String str = "Current playing: ";
         mediaPlayer = MediaPlayer.create(MainActivity.this, songList.get(position).getFile());
-        songTitle.setText(str + songList.get(position).getName());
-
-        songProgress.setMax(mediaPlayer.getDuration());
-        int duration = mediaPlayer.getDuration();
-        //maybe in milliseconds makes the app overload?
-        String time = String.format("%2d:%02d", TimeUnit.MILLISECONDS.toMinutes(duration), TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration)));
-        songDuration.setText(time);
+        binding.setSongModel(new SongNameModel(songList.get(position).getName(),mediaPlayer.getDuration()));
     }
 
     protected void changeNextPos(){
@@ -207,11 +198,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
-    }
-
-    protected void updateTimer(){
-        int currentPos = mediaPlayer.getCurrentPosition();
-        String currentTime = String.format("%2d:%02d", TimeUnit.MILLISECONDS.toMinutes(currentPos), TimeUnit.MILLISECONDS.toSeconds(currentPos) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPos)));
-        timer.setText(currentTime);
     }
 }
