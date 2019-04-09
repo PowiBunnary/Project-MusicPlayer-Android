@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     MediaPlayer mediaPlayer;
     ImageButton toggle, next, prev, stop;
-    TextView songTitle, songDuration, timer;
     SeekBar songProgress;
     ArrayList<Song> songList;
     int position, maxPos;
@@ -56,14 +55,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setSongList();
         position = 0;
 
-        songTitle = (TextView) findViewById(R.id.CurrentTitle);
-        songDuration = (TextView) findViewById(R.id.SongLength);
-        timer = (TextView) findViewById(R.id.StartTimer);
-        toggle = (ImageButton) findViewById(R.id.ToggleButton);
-        next = (ImageButton) findViewById(R.id.NextButton);
-        prev = (ImageButton) findViewById(R.id.PrevButton);
-        stop = (ImageButton) findViewById(R.id.StopButton);
-        songProgress = (SeekBar) findViewById(R.id.SongProgress);
+        toggle = findViewById(R.id.ToggleButton);
+        next = findViewById(R.id.NextButton);
+        prev = findViewById(R.id.PrevButton);
+        stop = findViewById(R.id.StopButton);
+        songProgress = findViewById(R.id.SongProgress);
 
         prepareSong();
         //dunno about this, but it makes the song works with the SeekBar when first initialized
@@ -76,12 +72,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         next.setOnClickListener(this);
         prev.setOnClickListener(this);
         stop.setOnClickListener(this);
+
         songProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int trackingPos = seekBar.getProgress();
-                String trackTime = String.format("%2d:%02d", TimeUnit.MILLISECONDS.toMinutes(trackingPos), TimeUnit.MILLISECONDS.toSeconds(trackingPos) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(trackingPos)));
-                timer.setText(trackTime);
+                binding.setSeekModel(new SeekBarModel(seekBar.getProgress()));
             }
 
             @Override
@@ -94,9 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (mediaPlayer.isPlaying())
                     mSeekbarUpdateHandler.postDelayed(mUpdateSeekbar,500);
 
-                mediaPlayer.seekTo(seekBar.getProgress());
-                binding.setSeekModel(new SeekBarModel(mediaPlayer.getCurrentPosition()));
-
+                mediaPlayer.seekTo(binding.getSeekModel().getSeekBarPos());
             }
         });
 

@@ -63,7 +63,7 @@
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:progress="@{seekModel.seekBarPos}"
-            android:max="@{songModel.maxSeekerLength}"/>
+            android:max="@{songModel.maxSeekerLength}" />
 
         <TextView
             android:layout_width="wrap_content"

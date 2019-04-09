@@ -2,6 +2,9 @@ package Binders;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
+import android.databinding.BindingAdapter;
+import android.media.MediaPlayer;
+import android.widget.SeekBar;
 
 import com.example.powimusicplayer.BR;
 
@@ -10,15 +13,11 @@ import java.util.concurrent.TimeUnit;
 public class SeekBarModel extends BaseObservable {
     private int currentPosition;
     private int seekBarPos;
-
-
+    private MediaPlayer mediaPlayer;
 
     public SeekBarModel(int currentPosition) {
         seekBarPos = this.currentPosition = currentPosition;
     }
-
-
-
 
     @Bindable
     public String getCurrentPosition() {
@@ -40,4 +39,6 @@ public class SeekBarModel extends BaseObservable {
         this.seekBarPos = seekBarPos;
         notifyPropertyChanged(BR.seekBarPos);
     }
+
+    //@BindingAdapter(value = {"android:onProgressChanged"})
 }
