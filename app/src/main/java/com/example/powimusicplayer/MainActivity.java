@@ -2,21 +2,18 @@ package com.example.powimusicplayer;
 
 import android.databinding.DataBindingUtil;
 import android.media.MediaPlayer;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
-import android.widget.TextView;
 
 import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
-import Binders.SeekBarModel;
-import Binders.SongNameModel;
+import Binders.SongModel;
 import DTOs.Song;
 
 //nox_adb.exe connect 127.0.0.1:62001 -- use Nox emulator instead, remember to turn on Nox first.
@@ -42,16 +39,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        mUpdateSeekbar  = new Runnable() {
+        mUpdateSeekbar = new Runnable() {
             @Override
             public void run() {
-                int currentPos = mediaPlayer.getCurrentPosition();
-                binding.setSeekModel(new SeekBarModel(currentPos));
+                if (binding.getSongModel() != null) {
+                    binding.getSongModel().setCurrentPosition(mediaPlayer);
+                }
                 mSeekbarUpdateHandler.postDelayed(this, 50);
             }
         };
+        mSeekbarUpdateHandler.post(mUpdateSeekbar);
 
-        songList = new ArrayList<Song>();
+        songList = new ArrayList<>();
         setSongList();
         position = 0;
 
@@ -62,36 +61,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         songProgress = findViewById(R.id.SongProgress);
 
         prepareSong();
-        //dunno about this, but it makes the song works with the SeekBar when first initialized
-        playSong();
-        mediaPlayer.pause();
-        mSeekbarUpdateHandler.removeCallbacks(mUpdateSeekbar);
-        binding.setSeekModel(new SeekBarModel(0));
 
         toggle.setOnClickListener(this);
         next.setOnClickListener(this);
         prev.setOnClickListener(this);
         stop.setOnClickListener(this);
-
-        songProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                binding.setSeekModel(new SeekBarModel(seekBar.getProgress()));
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                mSeekbarUpdateHandler.removeCallbacks(mUpdateSeekbar);
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                if (mediaPlayer.isPlaying())
-                    mSeekbarUpdateHandler.postDelayed(mUpdateSeekbar,500);
-
-                mediaPlayer.seekTo(binding.getSeekModel().getSeekBarPos());
-            }
-        });
 
     }
 
@@ -102,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.ToggleButton:
                 if (mediaPlayer.isPlaying()){
                     mediaPlayer.pause();
-                    mSeekbarUpdateHandler.removeCallbacks(mUpdateSeekbar);
                     toggle.setBackgroundResource(R.drawable.ic_play_button);
                 }
                 else {
@@ -120,7 +93,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 //if nothing's touched yet
                 else {
-                    binding.setSeekModel(new SeekBarModel(0));
                     prepareSong();
                 }
                 break;
@@ -136,7 +108,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 //if nothing's touched yet
                 else {
-                    binding.setSeekModel(new SeekBarModel(0));
                     prepareSong();
                 }
                 break;
@@ -144,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mediaPlayer.stop();
                 prepareSong();
                 toggle.setBackgroundResource(R.drawable.ic_play_button);
-                binding.setSeekModel(new SeekBarModel(0));
                 break;
 
         }
@@ -161,7 +131,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     protected void prepareSong(){
         mediaPlayer = MediaPlayer.create(MainActivity.this, songList.get(position).getFile());
-        binding.setSongModel(new SongNameModel(songList.get(position).getName(),mediaPlayer.getDuration()));
+        if (binding.getSongModel() == null) {
+            binding.setSongModel(new SongModel(songList.get(position), mediaPlayer));
+        } else {
+            binding.getSongModel().setSong(songList.get(position), mediaPlayer);
+        }
+
     }
 
     protected void changeNextPos(){
@@ -173,8 +148,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void playSong(){
         //play the song
         mediaPlayer.start();
-
-        mSeekbarUpdateHandler.postDelayed(mUpdateSeekbar, 500);
 
         //change to next song if a song is completed
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {

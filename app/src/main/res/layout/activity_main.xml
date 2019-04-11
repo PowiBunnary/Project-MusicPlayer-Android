@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <variable
-            name="seekModel"
-            type="Binders.SeekBarModel"></variable>
-        <variable
-            name="songModel"
-            type="Binders.SongNameModel"></variable>
+        <import type="Helpers.Converter"/>
+        <variable name="songModel" type="Binders.SongModel"/>
     </data>
     <RelativeLayout
         android:layout_width="match_parent"
@@ -62,13 +57,13 @@
             android:layout_marginBottom="103dp"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
-            android:progress="@{seekModel.seekBarPos}"
-            android:max="@{songModel.maxSeekerLength}" />
+            android:progress="@={songModel.currentPosition}"
+            android:max="@{songModel.duration}" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{seekModel.currentPosition}"
+            android:text="@{Converter.ToTimeString(songModel.currentPosition)}"
             android:id="@+id/StartTimer"
             android:layout_alignParentLeft="true"
             android:layout_alignBottom="@id/SongProgress"
@@ -82,13 +77,13 @@
             android:layout_alignBottom="@id/SongProgress"
             android:layout_marginBottom="32dp"
             android:layout_marginRight="12dp"
-            android:text="@{songModel.fileDuration}"
+            android:text="@{Converter.ToTimeString(songModel.duration)}"
             android:id="@+id/SongLength"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{songModel.fileName}"
+            android:text="@{songModel.name}"
             android:textColor="@color/primaryText"
             android:layout_alignBottom="@id/StartTimer"
             android:layout_marginBottom="24dp"
