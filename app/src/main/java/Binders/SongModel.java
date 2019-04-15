@@ -3,6 +3,7 @@ package Binders;
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
 import android.media.MediaPlayer;
+import android.widget.SeekBar;
 
 import com.example.powimusicplayer.BR;
 
@@ -12,6 +13,8 @@ public class SongModel extends BaseObservable {
 
     private Song song;
     private MediaPlayer mediaPlayer;
+    private boolean isPlaying;
+    private boolean isTouching;
 
     public SongModel(Song song, MediaPlayer mediaPlayer) {
         this.song = song;
@@ -51,12 +54,6 @@ public class SongModel extends BaseObservable {
             notifyPropertyChanged(BR.duration);
         }
     }
-    public void setDuration(MediaPlayer mediaPlayer) {
-        if (song.getDuration() != mediaPlayer.getDuration()) {
-            this.song.setDuration(mediaPlayer.getDuration());
-            notifyPropertyChanged(BR.duration);
-        }
-    }
 
     @Bindable
     public int getCurrentPosition() {
@@ -66,17 +63,37 @@ public class SongModel extends BaseObservable {
     public void setCurrentPosition(int currentPosition) {
         if (song.getCurrentPosition() != currentPosition) {
             song.setCurrentPosition(currentPosition);
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.seekTo(currentPosition);
-            }
+            if (!isTouching) mediaPlayer.seekTo(currentPosition);
             notifyPropertyChanged(BR.currentPosition);
         }
     }
 
     public void setCurrentPosition(MediaPlayer mediaPlayer) {
-        if (song.getCurrentPosition() != mediaPlayer.getCurrentPosition()) {
+        if (!isTouching && song.getCurrentPosition() != mediaPlayer.getCurrentPosition()) {
             song.setCurrentPosition(mediaPlayer.getCurrentPosition());
             notifyPropertyChanged(BR.currentPosition);
         }
+    }
+
+    public boolean isTouching() {
+        return isTouching;
+    }
+    public void setTouching(boolean touching) {
+        isTouching = touching;
+    }
+
+    public void onStopTouching(SeekBar seekBar) {
+        mediaPlayer.seekTo(seekBar.getProgress());
+        isTouching = false;
+    }
+
+    @Bindable
+    public boolean isPlaying() {
+        return isPlaying;
+    }
+
+    public void setPlaying(boolean playing) {
+        isPlaying = playing;
+        notifyPropertyChanged(BR.playing);
     }
 }

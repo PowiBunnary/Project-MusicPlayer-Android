@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void run() {
                 if (binding.getSongModel() != null) {
                     binding.getSongModel().setCurrentPosition(mediaPlayer);
+                    binding.getSongModel().setPlaying(mediaPlayer.isPlaying());
                 }
                 mSeekbarUpdateHandler.postDelayed(this, 50);
             }
@@ -66,7 +67,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         next.setOnClickListener(this);
         prev.setOnClickListener(this);
         stop.setOnClickListener(this);
-
     }
 
     @Override
@@ -76,11 +76,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.ToggleButton:
                 if (mediaPlayer.isPlaying()){
                     mediaPlayer.pause();
-                    toggle.setBackgroundResource(R.drawable.ic_play_button);
                 }
                 else {
                     playSong();
-                    toggle.setBackgroundResource(R.drawable.ic_pause_button);
                 }
                 break;
             case R.id.NextButton:
@@ -153,14 +151,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                mediaPlayer.stop();
-                changeNextPos();
-                prepareSong();
                 try {
-                    Thread.sleep(1500);
-                    playSong();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    if (!binding.getSongModel().isTouching()) {
+                        mp.stop();
+                        changeNextPos();
+                        prepareSong();
+                        Thread.sleep(1500);
+                        playSong();
+                    }
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         });

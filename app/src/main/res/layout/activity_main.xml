@@ -25,27 +25,27 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_marginRight="25dp"
-                android:background="@drawable/ic_back_button" />
+                android:background="@drawable/ic_back_button"/>
 
             <ImageButton
                 android:id="@+id/ToggleButton"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_marginRight="25dp"
-                android:background="@drawable/ic_play_button" />
+                android:background="@{songModel.isPlaying ? @drawable/ic_pause_button : @drawable/ic_play_button }"/>
 
             <ImageButton
                 android:id="@+id/StopButton"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_marginRight="25dp"
-                android:background="@drawable/ic_stop_button" />
+                android:background="@drawable/ic_stop_button"/>
 
             <ImageButton
                 android:id="@+id/NextButton"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:background="@drawable/ic_next_button" />
+                android:background="@drawable/ic_next_button"/>
         </LinearLayout>
 
 
@@ -58,7 +58,9 @@
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:progress="@={songModel.currentPosition}"
-            android:max="@{songModel.duration}" />
+            android:onStartTrackingTouch="@{(seekBar) -> songModel.setTouching(true)}"
+            android:onStopTrackingTouch="@{songModel::onStopTouching}"
+            android:max="@{songModel.duration}"/>
 
         <TextView
             android:layout_width="wrap_content"
