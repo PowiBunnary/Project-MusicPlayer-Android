@@ -1,12 +1,17 @@
 package DTOs;
 
-public class Song {
-    private String name, path;
-    private int duration;
+import android.media.MediaPlayer;
 
-    public Song(String name, String path) {
+public class Song {
+    private String name;
+    private String file;
+    private int duration;
+    private int currentPosition;
+
+
+    public Song(String name, String file) {
         this.name = name;
-        this.path = path;
+        this.file = file;
     }
 
     public String getName() {
@@ -17,19 +22,31 @@ public class Song {
         this.name = name;
     }
 
-    public String getPath() {
-        return path;
+    public String getFile() {
+        return file;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setFile(String file) {
+        this.file = file;
     }
 
     public int getDuration() {
         return duration;
     }
-
     public void setDuration(int duration) {
         this.duration = duration;
+    }
+
+    public int getCurrentPosition() {
+        return currentPosition;
+    }
+
+    public void setCurrentPosition(int currentPosition) {
+        this.currentPosition = currentPosition;
+    }
+
+    public void setDurationAndPosition(MediaPlayer mediaPlayer) {
+        currentPosition = mediaPlayer.getCurrentPosition();
+        duration = mediaPlayer.getDuration();
     }
 }
