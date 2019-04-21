@@ -35,14 +35,13 @@ public class MediaService extends IntentService {
         this.mUpdateSeekbar = mUpdateSeekbar;
         this.mSeekbarUpdateHandler.post(mUpdateSeekbar);
         songs =  getPlayList(Environment.getExternalStorageDirectory().toString() + "@Download".replace('@','/'));
-        /*mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-            @Override
-            public boolean onError(MediaPlayer mp, int what, int extra) {
-                return true;
-            }
-        });*/
-
         prepareSong();
+    }
+
+    public MediaService(String name, MediaPlayer mediaPlayer, ArrayList<Song> songs) {
+        super(name);
+        this.mediaPlayer = mediaPlayer;
+        this.songs = songs;
     }
 
     private ArrayList<Song> getPlayList(String rootPath) {
@@ -58,7 +57,19 @@ public class MediaService extends IntentService {
                         break;
                     }
                 } else if (file.getName().endsWith(".mp3")) {
-                    Song song = new Song(file.getName(),file.getAbsolutePath());
+                    String name = file.getName();
+                    if(name.length() > 4)
+                        name = name.substring(0, name.length() - 4);
+
+                    Song song = new Song(name,file.getAbsolutePath());
+                    try {
+                        mediaPlayer.setDataSource(song.getFile());
+                        mediaPlayer.prepare();
+                        song.setDuration(mediaPlayer.getDuration());
+                        mediaPlayer.reset();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     fileList.add(song);
                 }
             }
@@ -66,6 +77,10 @@ public class MediaService extends IntentService {
         } catch (RuntimeException e) {
             throw e;
         }
+    }
+
+    public ArrayList<Song> getSongs() {
+        return songs;
     }
 
     private void prepareSong() {
@@ -156,6 +171,17 @@ public class MediaService extends IntentService {
         mediaPlayer.stop();
         mediaPlayer.reset();
         prepareSong();
+    }
+
+    public void goToSong(int pos) {
+        mediaPlayer.reset();
+        position = pos;
+        prepareSong();
+        playSong();
+    }
+
+    public int getPosition() {
+        return position;
     }
 
     protected void onHandleIntent(Intent var1) {}

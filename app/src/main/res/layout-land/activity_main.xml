@@ -60,7 +60,6 @@
             android:progress="@{songModel.currentPosition}"
             android:onStartTrackingTouch="@{(seekBar) -> songModel.setTouching(true)}"
             android:onStopTrackingTouch="@{songModel::onStopTouching}"
-            android:onProgressChanged="@{songModel::onProgressChanged}"
             android:max="@{songModel.duration}"/>
 
         <TextView
@@ -95,7 +94,7 @@
 
         <android.support.v7.widget.RecyclerView
             android:layout_width="match_parent"
-            android:layout_height="512dp"
+            android:layout_height="216dp"
             android:scrollbars="vertical"
             android:id="@+id/songListView"
             ></android.support.v7.widget.RecyclerView>

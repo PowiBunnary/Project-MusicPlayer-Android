@@ -87,6 +87,12 @@ public class SongModel extends BaseObservable {
         isTouching = false;
     }
 
+    public void onProgressChanged(SeekBar seekBar, int progess, boolean fromUser) {
+        if(fromUser) {
+            setCurrentPosition(progess);
+        }
+    }
+
     @Bindable
     public boolean isPlaying() {
         return isPlaying;

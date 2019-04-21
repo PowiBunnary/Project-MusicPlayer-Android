@@ -5,6 +5,8 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import Binders.SongModel;
 import DTOs.Song;
 import Services.MediaService;
+import Services.SongListViewAdapter;
 
 //nox_adb.exe connect 127.0.0.1:62001 -- use Nox emulator instead, remember to turn on Nox first.
 
@@ -24,16 +27,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     MediaPlayer mediaPlayer;
     ImageButton toggle, next, prev, stop;
-    SeekBar songProgress;
-    ArrayList<Song> songList;
-    int position, maxPos;
     MediaService mediaService;
+    RecyclerView recyclerView;
+    RecyclerView.Adapter adapter;
+    RecyclerView.LayoutManager layoutManager;
 
     //for the seekbar
     private Handler mSeekbarUpdateHandler = new Handler();
     private Runnable mUpdateSeekbar;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,22 +57,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mediaService = new MediaService("service", mediaPlayer, binding, mSeekbarUpdateHandler, mUpdateSeekbar);
 
-        songList = new ArrayList<>();
-        //setSongList();
-        position = 0;
-
         toggle = findViewById(R.id.ToggleButton);
         next = findViewById(R.id.NextButton);
         prev = findViewById(R.id.PrevButton);
         stop = findViewById(R.id.StopButton);
-        songProgress = findViewById(R.id.SongProgress);
-
-        //prepareSong();
+        recyclerView = findViewById(R.id.songListView);
 
         toggle.setOnClickListener(this);
         next.setOnClickListener(this);
         prev.setOnClickListener(this);
         stop.setOnClickListener(this);
+
+        //RecyclerView
+        //recyclerView.setHasFixedSize(true);
+
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+
+        adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService);
+        recyclerView.setAdapter(adapter);
     }
 
     @Override
@@ -92,5 +96,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
         }
+        adapter.notifyDataSetChanged();
     }
 }
