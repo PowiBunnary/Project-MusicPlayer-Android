@@ -1,22 +1,24 @@
 package com.example.powimusicplayer;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
-import java.util.ArrayList;
-
-import Binders.SongModel;
-import DTOs.Song;
 import Services.MediaService;
 import Services.SongListViewAdapter;
 
@@ -26,20 +28,25 @@ import Services.SongListViewAdapter;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     MediaPlayer mediaPlayer;
+    TextView error;
     ImageButton toggle, next, prev, stop;
     MediaService mediaService;
     RecyclerView recyclerView;
     RecyclerView.Adapter adapter;
     RecyclerView.LayoutManager layoutManager;
+    ActivityMainBinding binding;
 
     //for the seekbar
     private Handler mSeekbarUpdateHandler = new Handler();
     private Runnable mUpdateSeekbar;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+
+        mediaPlayer = new MediaPlayer();
 
         mUpdateSeekbar = new Runnable() {
             @Override
@@ -51,11 +58,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mSeekbarUpdateHandler.postDelayed(this, 50);
             }
         };
-        //mSeekbarUpdateHandler.post(mUpdateSeekbar);
-
-        mediaPlayer = new MediaPlayer();
-
-        mediaService = new MediaService("service", mediaPlayer, binding, mSeekbarUpdateHandler, mUpdateSeekbar);
+        mSeekbarUpdateHandler.post(mUpdateSeekbar);
 
         toggle = findViewById(R.id.ToggleButton);
         next = findViewById(R.id.NextButton);
@@ -63,19 +66,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         stop = findViewById(R.id.StopButton);
         recyclerView = findViewById(R.id.songListView);
 
-        toggle.setOnClickListener(this);
-        next.setOnClickListener(this);
-        prev.setOnClickListener(this);
-        stop.setOnClickListener(this);
+        error = findViewById(R.id.errorText);
 
         //RecyclerView
-        //recyclerView.setHasFixedSize(true);
+        recyclerView.setHasFixedSize(true);
 
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService);
-        recyclerView.setAdapter(adapter);
+        //Request Permission
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
+        }
+        else {
+            doTasks();
+        }
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -94,8 +105,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.StopButton:
                 mediaService.stopSong();
                 break;
-
         }
         adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    doTasks();
+                }
+        }
+    }
+
+    private void doTasks() {
+        //mediaService's task
+        mediaService = new MediaService("service", mediaPlayer, binding);
+
+        //recyclerView's tasks
+        adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService);
+        recyclerView.setAdapter(adapter);
+
+        //setOnClickListener's tasks
+        if(mediaService.getSongs().size() > 0) {
+            toggle.setOnClickListener(this);
+            next.setOnClickListener(this);
+            prev.setOnClickListener(this);
+            stop.setOnClickListener(this);
+        }
+        else {
+            error.setText("No music found");
+        }
     }
 }

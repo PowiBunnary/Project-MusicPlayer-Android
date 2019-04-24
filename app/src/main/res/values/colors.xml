@@ -3,10 +3,6 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
-    <color name="drawableBackground">#DCEF7C</color>
     <color name="primaryText">#000000</color>
-    <color name="navHeaderBackground">#014cc4</color>
-    <color name="navHeaderTitle">#ffffff</color>
     <color name="songTitle">#cc30dd</color>
-    <color name="isPlaying">#42cef4</color>
 </resources>

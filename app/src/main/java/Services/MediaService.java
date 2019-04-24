@@ -2,12 +2,8 @@ package Services;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Environment;
-import android.os.Handler;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
@@ -24,24 +20,19 @@ public class MediaService extends IntentService {
     private int position = 0;
     private boolean isComplete = false;
     private ArrayList<Song> songs;
-    private Handler mSeekbarUpdateHandler;
-    private Runnable mUpdateSeekbar;
+    //private Handler mSeekbarUpdateHandler;
+    //private Runnable mUpdateSeekbar;
 
-    public MediaService(String name, MediaPlayer mediaPlayer, ActivityMainBinding binder, Handler mSeekbarUpdateHandler, Runnable mUpdateSeekbar) {
+    public MediaService(String name, MediaPlayer mediaPlayer, ActivityMainBinding binder) {
         super(name);
         this.mediaPlayer = mediaPlayer;
         this.binder = binder;
-        this.mSeekbarUpdateHandler = mSeekbarUpdateHandler;
-        this.mUpdateSeekbar = mUpdateSeekbar;
-        this.mSeekbarUpdateHandler.post(mUpdateSeekbar);
+        //this.mSeekbarUpdateHandler = mSeekbarUpdateHandler;
+        //this.mUpdateSeekbar = mUpdateSeekbar;
+        //this.mSeekbarUpdateHandler.post(mUpdateSeekbar);
         songs =  getPlayList(Environment.getExternalStorageDirectory().toString() + "@Download".replace('@','/'));
-        prepareSong();
-    }
-
-    public MediaService(String name, MediaPlayer mediaPlayer, ArrayList<Song> songs) {
-        super(name);
-        this.mediaPlayer = mediaPlayer;
-        this.songs = songs;
+        if (songs.size() > 0)
+            prepareSong();
     }
 
     private ArrayList<Song> getPlayList(String rootPath) {
@@ -49,30 +40,31 @@ public class MediaService extends IntentService {
         try {
             File rootFolder = new File(rootPath);
             File[] files = rootFolder.listFiles();
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    if (getPlayList(file.getAbsolutePath()) != null) {
-                        fileList.addAll(getPlayList(file.getAbsolutePath())); //Recursive
-                    } else {
-                        break;
-                    }
-                } else if (file.getName().endsWith(".mp3")) {
-                    String name = file.getName();
-                    if(name.length() > 4)
-                        name = name.substring(0, name.length() - 4);
+            if (files != null)
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        if (getPlayList(file.getAbsolutePath()) != null) {
+                            fileList.addAll(getPlayList(file.getAbsolutePath())); //Recursive
+                        } else {
+                            break;
+                        }
+                    } else if (file.getName().endsWith(".mp3")) {
+                        String name = file.getName();
+                        if(name.length() > 4)
+                            name = name.substring(0, name.length() - 4);
 
-                    Song song = new Song(name,file.getAbsolutePath());
-                    try {
-                        mediaPlayer.setDataSource(song.getFile());
-                        mediaPlayer.prepare();
-                        song.setDuration(mediaPlayer.getDuration());
-                        mediaPlayer.reset();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        Song song = new Song(name,file.getAbsolutePath());
+                        try {
+                            mediaPlayer.setDataSource(song.getFile());
+                            mediaPlayer.prepare();
+                            song.setDuration(mediaPlayer.getDuration());
+                            mediaPlayer.reset();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        fileList.add(song);
                     }
-                    fileList.add(song);
                 }
-            }
             return fileList;
         } catch (RuntimeException e) {
             throw e;
