@@ -1,12 +1,17 @@
 package com.example.powimusicplayer;
 
 import android.Manifest;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
@@ -19,8 +24,8 @@ import android.widget.TextView;
 
 import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
-import Services.MediaService;
-import Services.SongListViewAdapter;
+import services.MediaService;
+import services.SongListViewAdapter;
 
 //nox_adb.exe connect 127.0.0.1:62001 -- use Nox emulator instead, remember to turn on Nox first.
 
@@ -31,10 +36,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView error;
     ImageButton toggle, next, prev, stop;
     MediaService mediaService;
+    boolean mBound = false;
     RecyclerView recyclerView;
     RecyclerView.Adapter adapter;
     RecyclerView.LayoutManager layoutManager;
     ActivityMainBinding binding;
+
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            MediaService.LocalBinder binder = (MediaService.LocalBinder) service;
+            mediaService = binder.getService();
+            mediaService.setup(binding, mediaPlayer);
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
 
     //for the seekbar
     private Handler mSeekbarUpdateHandler = new Handler();
@@ -87,10 +109,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStart() {
         super.onStart();
+        Intent intent = new Intent(this, MediaService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(connection);
+        mBound = false;
     }
 
     @Override
     public void onClick(View v){
+        if (!mBound) return;
+
         int id = v.getId();
         switch (id) {
             case R.id.ToggleButton:
@@ -120,8 +153,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void doTasks() {
-        //mediaService's task
-        mediaService = new MediaService("service", mediaPlayer, binding);
+        if (!mBound) return;
 
         //recyclerView's tasks
         adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService);

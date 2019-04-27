@@ -1,4 +1,4 @@
-package Services;
+package services;
 
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
