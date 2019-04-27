@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="Helpers.Converter"/>
+        <variable name="songModel" type="Binders.SongModel"/>
+    </data>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
 
 
     <LinearLayout
@@ -27,7 +32,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginRight="40dp"
-            android:background="@drawable/ic_play_button" />
+                android:background="@{songModel.isPlaying ? @drawable/ic_pause_button : @drawable/ic_play_button }" />
 
         <ImageButton
             android:id="@+id/StopButton"
@@ -51,12 +56,17 @@
         android:layout_alignBottom="@id/ControlContainer"
         android:layout_marginBottom="84dp"
         android:paddingLeft="20dp"
-        android:paddingRight="20dp" />
+        android:paddingRight="20dp"
+    	android:progress="@{songModel.currentPosition}"
+    	android:onStartTrackingTouch="@{(seekBar) -> songModel.setTouching(true)}"
+    	android:onStopTrackingTouch="@{songModel::onStopTouching}"
+    	android:onProgressChanged="@{songModel::onProgressChanged}"
+    	android:max="@{songModel.duration}"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0:00"
+        android:text="@{Converter.ToTimeString(songModel.currentPosition)}"
         android:id="@+id/StartTimer"
         android:layout_alignParentLeft="true"
         android:layout_alignBottom="@id/SongProgress"
@@ -70,17 +80,36 @@
         android:layout_alignBottom="@id/SongProgress"
         android:layout_marginBottom="32dp"
         android:layout_marginRight="12dp"
-        android:text="0:00"
+        android:text="@{Converter.ToTimeString(songModel.duration)}"
         android:id="@+id/SongLength"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Current playing: "
+        android:text="@{songModel.name}"
         android:textColor="@color/primaryText"
         android:layout_alignBottom="@id/StartTimer"
         android:layout_marginBottom="24dp"
         android:layout_marginLeft="12dp"
         android:id="@+id/CurrentTitle"/>
 
-</RelativeLayout>
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="512dp"
+            android:scrollbars="vertical"
+            android:id="@+id/songListView"
+            android:layout_alignBottom="@id/CurrentTitle"
+            android:layout_marginBottom="32dp"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_alignBottom="@id/SongProgress"
+            android:layout_marginBottom="24dp"
+            android:text=""
+            android:id="@+id/errorText"/>
+    </RelativeLayout>
+
+</layout>

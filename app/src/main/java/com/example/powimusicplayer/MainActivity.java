@@ -1,142 +1,146 @@
 package com.example.powimusicplayer;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
-import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
-import android.media.session.MediaSession;
-import android.net.Uri;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.databinding.DataBindingUtil;
+import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
-import android.view.Menu;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.RemoteViews;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
+import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
-import DTOs.Song;
+import Binders.SongModel;
+import services.MediaService;
+import services.SongListViewAdapter;
 
 //nox_adb.exe connect 127.0.0.1:62001 -- use Nox emulator instead, remember to turn on Nox first.
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
-    MediaPlayer mediaPlayer;
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, NotificationCallBack {
+    TextView error;
     ImageButton toggle, next, prev, stop;
-    TextView songTitle, songDuration, timer;
-    SeekBar songProgress;
-    ArrayList<Song> songList;
-    int position, maxPos;
+    MediaService mediaService;
+    RecyclerView recyclerView;
+    RecyclerView.Adapter adapter;
+    RecyclerView.LayoutManager layoutManager;
+    ActivityMainBinding binding;
 
     NotificationManagerCompat notificationManager;
     Notification musicNotification;
     public final String CHANNEL_ID = "MUSIC_CHANNEL";
     public final int MUSIC_ID = 0;
 
-    //for the seekbar
-    private Handler mSeekbarUpdateHandler = new Handler();
-    private Runnable mUpdateSeekbar = new Runnable() {
+    private ServiceConnection connection = new ServiceConnection() {
         @Override
-        public void run() {
-            int currentPos = mediaPlayer.getCurrentPosition();
-
-            updateTimer();
-            songProgress.setProgress(currentPos);
-            mSeekbarUpdateHandler.postDelayed(this, 50);
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            MediaService.LocalBinder binder = (MediaService.LocalBinder) service;
+            mediaService = binder.getService();
+            mediaService.setCallback(MainActivity.this);
+            doTasks();
         }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {}
     };
 
-    private void createNotification(String songName, String songAuthor, int toggleIconSrc) {
-        Intent backIntent = new Intent(this, MusicPlayerService.class);
+    private void createNotification(String songName, String songAuthor, int toggleIconId) {
+        Intent backIntent = new Intent(this, MediaService.class);
+        backIntent.setAction("BACK");
         PendingIntent pIntent = PendingIntent.getService(
                 this,
                 MUSIC_ID,
                 backIntent,
                 PendingIntent.FLAG_CANCEL_CURRENT);
 
+        Intent toggleIntent = new Intent(this, MediaService.class);
+        toggleIntent.setAction("TOGGLE");
+        PendingIntent tIntent = PendingIntent.getService(
+                this,
+                MUSIC_ID,
+                toggleIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT);
+
+        Intent nextIntent = new Intent(this, MediaService.class);
+        nextIntent.setAction("NEXT");
+        PendingIntent nIntent = PendingIntent.getService(
+                this,
+                MUSIC_ID,
+                nextIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT);
+
         RemoteViews view = new RemoteViews(getPackageName(), R.layout.custom_notification);
         view.setTextViewText(R.id.notification_song_title, songName);
         view.setTextViewText(R.id.notification_song_author, songAuthor);
-        view.setImageViewResource(R.id.notification_toggle, toggleIconSrc);
+        view.setImageViewResource(R.id.notification_toggle, toggleIconId);
         view.setOnClickPendingIntent(R.id.notification_back, pIntent);
+        view.setOnClickPendingIntent(R.id.notification_toggle, tIntent);
+        view.setOnClickPendingIntent(R.id.notification_next, nIntent);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         musicNotification = builder
                             .setSmallIcon(R.drawable.logo)
                             .setCustomContentView(view)
-                            .setOngoing(true)
+                            .setOngoing(toggleIconId == R.drawable.ic_pause_button)
                             .build();
     }
 
+	@RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        notificationManager = NotificationManagerCompat.from(this);
+		notificationManager = NotificationManagerCompat.from(this);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
-        songList = new ArrayList<Song>();
-        setSongList();
-        position = 0;
+        toggle = findViewById(R.id.ToggleButton);
+        next = findViewById(R.id.NextButton);
+        prev = findViewById(R.id.PrevButton);
+        stop = findViewById(R.id.StopButton);
+        recyclerView = findViewById(R.id.songListView);
 
-        songTitle = (TextView) findViewById(R.id.CurrentTitle);
-        songDuration = (TextView) findViewById(R.id.SongLength);
-        timer = (TextView) findViewById(R.id.StartTimer);
-        toggle = (ImageButton) findViewById(R.id.ToggleButton);
-        next = (ImageButton) findViewById(R.id.NextButton);
-        prev = (ImageButton) findViewById(R.id.PrevButton);
-        stop = (ImageButton) findViewById(R.id.StopButton);
-        songProgress = (SeekBar) findViewById(R.id.SongProgress);
+        error = findViewById(R.id.errorText);
 
-        prepareSong();
-        //dunno about this, but it makes the song works with the SeekBar when first initialized
-        playSong();
-        mediaPlayer.pause();
-        mSeekbarUpdateHandler.removeCallbacks(mUpdateSeekbar);
-        mediaPlayer.seekTo(0);
+        //RecyclerView
+        recyclerView.setHasFixedSize(true);
 
-        toggle.setOnClickListener(this);
-        next.setOnClickListener(this);
-        prev.setOnClickListener(this);
-        stop.setOnClickListener(this);
-        songProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int trackingPos = seekBar.getProgress();
-                String trackTime = String.format("%2d:%02d",
-                        TimeUnit.MILLISECONDS.toMinutes(trackingPos),
-                        TimeUnit.MILLISECONDS.toSeconds(trackingPos) -
-                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(trackingPos)));
-                timer.setText(trackTime);
-            }
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                mSeekbarUpdateHandler.removeCallbacks(mUpdateSeekbar);
-            }
+        //Request Permission
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
+        }
 
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                if (mediaPlayer.isPlaying())
-                    mSeekbarUpdateHandler.postDelayed(mUpdateSeekbar,500);
+        Intent intent = new Intent(this, MediaService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
-                mediaPlayer.seekTo(seekBar.getProgress());
-                updateTimer();
+        syncSongModel();
+    }
 
-            }
-        });
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        notificationManager.cancel(MUSIC_ID);
+        unbindService(connection);
     }
 
     @Override
@@ -144,120 +148,91 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int id = v.getId();
         switch (id) {
             case R.id.ToggleButton:
-                if (mediaPlayer.isPlaying()){
-                    mediaPlayer.pause();
-                    mSeekbarUpdateHandler.removeCallbacks(mUpdateSeekbar);
-                    toggle.setBackgroundResource(R.drawable.ic_play_button);
-                }
-                else {
-                    playSong();
-                    toggle.setBackgroundResource(R.drawable.ic_pause_button);
-                }
+                mediaService.toggle();
                 break;
             case R.id.NextButton:
-                changeNextPos();
-                if (mediaPlayer.isPlaying()){
-                    //if song's still playing
-                    mediaPlayer.stop();
-                    prepareSong();
-                    playSong();
-                }
-                //if nothing's touched yet
-                else {
-                    songProgress.setProgress(0);
-                    prepareSong();
-                }
+                mediaService.nextSong();
                 break;
             case R.id.PrevButton:
-                if (position > 0)
-                    position--;
-                else position = maxPos;
-                if (mediaPlayer.isPlaying()){
-                    //if song's still playing
-                    mediaPlayer.stop();
-                    prepareSong();
-                    playSong();
-                }
-                //if nothing's touched yet
-                else {
-                    songProgress.setProgress(0);
-                    prepareSong();
-                }
+                mediaService.prevSong();
                 break;
             case R.id.StopButton:
-                    mediaPlayer.stop();
-                    prepareSong();
-                    toggle.setBackgroundResource(R.drawable.ic_play_button);
-                    updateTimer();
-                    songProgress.setProgress(0);
-                    notificationManager.cancel(MUSIC_ID);
+                mediaService.stopSong();
                 break;
+            case R.id.songListView:
+                int pos = (int) v.getTag(R.id.songListView);
+                mediaService.goToSong(pos);
+                break;
+            default:
+                throw new RuntimeException("Unhandled case");
+        }
+        updateSongModel();
+        updateNotification();
+        adapter.notifyDataSetChanged();
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    doTasks();
+                }
         }
     }
 
-    protected void setSongList(){
-        songList.add(new Song("Silent Story", R.raw.silent_story));
-        songList.add(new Song("Flamingo", R.raw.flamingo));
-        songList.add(new Song("Flower Dance", R.raw.flower_dance));
-        songList.add(new Song("Faith", R.raw.faith));
-        songList.add(new Song("Give It Up", R.raw.give_it_up));
-        //Collections.sort(songList,String.CASE_INSENSITIVE_ORDER);
-        maxPos = songList.size() - 1;
-    }
-
-    protected void prepareSong(){
-        String str = "Current playing: ";
-        mediaPlayer = MediaPlayer.create(MainActivity.this, songList.get(position).getFile());
-        songTitle.setText(str + songList.get(position).getName());
-
-        songProgress.setMax(mediaPlayer.getDuration());
-        int duration = mediaPlayer.getDuration();
-        //maybe in milliseconds makes the app overload?
-        String time = String.format("%2d:%02d", TimeUnit.MILLISECONDS.toMinutes(duration), TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration)));
-        songDuration.setText(time);
-    }
-
-    protected void changeNextPos(){
-        if (position < maxPos)
-            position++;
-        else position = 0;
-    }
-
-    protected void playSong(){
-        //play the song
-        mediaPlayer.start();
-
-        mSeekbarUpdateHandler.postDelayed(mUpdateSeekbar, 500);
-
-        // Create a notification
-        // Need adding 1 more field to Song object: author/singer name
-        createNotification(
-                songList.get(position).getName(),
-                songList.get(position).getName(),
-                R.drawable.ic_pause_button);
-        notificationManager.notify(MUSIC_ID, musicNotification);
-
-        //change to next song if a song is completed
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+    // Call this function only once
+    private void syncSongModel() {
+        final Handler mSeekbarUpdateHandler = new Handler();
+        Runnable mUpdateSeekbar = new Runnable() {
             @Override
-            public void onCompletion(MediaPlayer mp) {
-                mediaPlayer.stop();
-                changeNextPos();
-                prepareSong();
-                try {
-                    Thread.sleep(1500);
-                    playSong();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            public void run() {
+                if (binding.getSongModel() != null) {
+                    binding.getSongModel().setCurrentPosition(mediaService.getMediaPlayer());
+                    binding.getSongModel().setPlaying(mediaService.getMediaPlayer().isPlaying());
                 }
+                mSeekbarUpdateHandler.postDelayed(this, 50);
             }
-        });
+        };
+        mSeekbarUpdateHandler.post(mUpdateSeekbar);
     }
 
-    protected void updateTimer(){
-        int currentPos = mediaPlayer.getCurrentPosition();
-        String currentTime = String.format("%2d:%02d", TimeUnit.MILLISECONDS.toMinutes(currentPos), TimeUnit.MILLISECONDS.toSeconds(currentPos) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPos)));
-        timer.setText(currentTime);
+    private void updateSongModel() {
+        if (binding.getSongModel() != null) {
+            binding.getSongModel().setSong(mediaService.getCurrentSong(), mediaService.getMediaPlayer());
+        } else {
+            binding.setSongModel(new SongModel(mediaService.getCurrentSong(), mediaService.getMediaPlayer()));
+        }
+    }
+
+    private void doTasks() {
+        //mediaService's tasks
+        mediaService.scanSongFromStorage();
+
+        //recyclerView's tasks
+        adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService, this);
+        recyclerView.setAdapter(adapter);
+
+        //setOnClickListener's tasks
+        if(mediaService.getSongs().size() > 0) {
+            toggle.setOnClickListener(this);
+            next.setOnClickListener(this);
+            prev.setOnClickListener(this);
+            stop.setOnClickListener(this);
+        }
+        else {
+            error.setText("No music found");
+        }
+    }
+
+    @Override
+    public void updateNotification() {
+        createNotification(
+                mediaService.getCurrentSong().getName(),
+                mediaService.getCurrentSong().getName(),
+                mediaService.getMediaPlayer().isPlaying() ?
+                        R.drawable.ic_pause_button :
+                        R.drawable.ic_play_button);
+        notificationManager.notify(MUSIC_ID, musicNotification);
     }
 }
