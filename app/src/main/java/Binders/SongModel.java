@@ -69,7 +69,7 @@ public class SongModel extends BaseObservable {
     }
 
     public void setCurrentPosition(MediaPlayer mediaPlayer) {
-        if (!isTouching && song.getCurrentPosition() != mediaPlayer.getCurrentPosition()) {
+        if (!isTouching() && song.getCurrentPosition() != mediaPlayer.getCurrentPosition()) {
             song.setCurrentPosition(mediaPlayer.getCurrentPosition());
             notifyPropertyChanged(BR.currentPosition);
         }
@@ -85,6 +85,13 @@ public class SongModel extends BaseObservable {
     public void onStopTouching(SeekBar seekBar) {
         mediaPlayer.seekTo(seekBar.getProgress());
         isTouching = false;
+    }
+
+    public void onProgressChanged(SeekBar seekBar, int progess, boolean fromUser) {
+        if(fromUser) {
+            isTouching = true;
+            setCurrentPosition(progess);
+        }
     }
 
     @Bindable

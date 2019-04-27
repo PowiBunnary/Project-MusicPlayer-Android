@@ -32,7 +32,7 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_marginRight="25dp"
-                android:background="@{songModel.isPlaying ? @drawable/ic_pause_button : @drawable/ic_play_button }"/>
+                android:background="@{songModel.isPlaying ? @drawable/ic_pause_button : @drawable/ic_play_button }" />
 
             <ImageButton
                 android:id="@+id/StopButton"
@@ -57,9 +57,10 @@
             android:layout_marginBottom="103dp"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
-            android:progress="@={songModel.currentPosition}"
+            android:progress="@{songModel.currentPosition}"
             android:onStartTrackingTouch="@{(seekBar) -> songModel.setTouching(true)}"
             android:onStopTrackingTouch="@{songModel::onStopTouching}"
+            android:onProgressChanged="@{songModel::onProgressChanged}"
             android:max="@{songModel.duration}"/>
 
         <TextView
@@ -92,6 +93,23 @@
             android:layout_marginLeft="12dp"
             android:id="@+id/CurrentTitle"/>
 
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:layout_height="512dp"
+            android:scrollbars="vertical"
+            android:id="@+id/songListView"
+            android:layout_alignBottom="@id/CurrentTitle"
+            android:layout_marginBottom="32dp"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_alignBottom="@id/SongProgress"
+            android:layout_marginBottom="24dp"
+            android:text=""
+            android:id="@+id/errorText"/>
     </RelativeLayout>
 
 </layout>

@@ -4,12 +4,12 @@ import android.media.MediaPlayer;
 
 public class Song {
     private String name;
-    private int file;
+    private String file;
     private int duration;
     private int currentPosition;
 
 
-    public Song(String name, int file) {
+    public Song(String name, String file) {
         this.name = name;
         this.file = file;
     }
@@ -22,11 +22,11 @@ public class Song {
         this.name = name;
     }
 
-    public int getFile() {
+    public String getFile() {
         return file;
     }
 
-    public void setFile(int file) {
+    public void setFile(String file) {
         this.file = file;
     }
 
