@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,6 +23,7 @@ import android.widget.TextView;
 
 import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
+import Binders.SongModel;
 import services.MediaService;
 import services.SongListViewAdapter;
 
@@ -31,16 +31,14 @@ import services.SongListViewAdapter;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
-
-    MediaPlayer mediaPlayer;
     TextView error;
     ImageButton toggle, next, prev, stop;
     MediaService mediaService;
-    boolean mBound = false;
     RecyclerView recyclerView;
     RecyclerView.Adapter adapter;
     RecyclerView.LayoutManager layoutManager;
     ActivityMainBinding binding;
+    boolean firstTime = true;
 
     private ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -48,39 +46,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                        IBinder service) {
             MediaService.LocalBinder binder = (MediaService.LocalBinder) service;
             mediaService = binder.getService();
-            mediaService.setup(binding, mediaPlayer);
-            mBound = true;
+            doTasks();
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
-        }
+        public void onServiceDisconnected(ComponentName arg0) {}
     };
 
-    //for the seekbar
-    private Handler mSeekbarUpdateHandler = new Handler();
-    private Runnable mUpdateSeekbar;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
-        mediaPlayer = new MediaPlayer();
-
-        mUpdateSeekbar = new Runnable() {
-            @Override
-            public void run() {
-                if (binding.getSongModel() != null) {
-                    binding.getSongModel().setCurrentPosition(mediaPlayer);
-                    binding.getSongModel().setPlaying(mediaPlayer.isPlaying());
-                }
-                mSeekbarUpdateHandler.postDelayed(this, 50);
-            }
-        };
-        mSeekbarUpdateHandler.post(mUpdateSeekbar);
 
         toggle = findViewById(R.id.ToggleButton);
         next = findViewById(R.id.NextButton);
@@ -100,30 +78,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
         }
-        else {
-            doTasks();
-        }
 
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
         Intent intent = new Intent(this, MediaService.class);
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
+
+        syncSongModel();
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         unbindService(connection);
-        mBound = false;
     }
 
     @Override
     public void onClick(View v){
-        if (!mBound) return;
-
         int id = v.getId();
         switch (id) {
             case R.id.ToggleButton:
@@ -139,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mediaService.stopSong();
                 break;
         }
+        updateSongModel();
         adapter.notifyDataSetChanged();
     }
 
@@ -152,11 +122,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    // Call this function only once
+    private void syncSongModel() {
+        final Handler mSeekbarUpdateHandler = new Handler();
+        Runnable mUpdateSeekbar = new Runnable() {
+            @Override
+            public void run() {
+                if (binding.getSongModel() != null) {
+                    binding.getSongModel().setCurrentPosition(mediaService.getMediaPlayer());
+                    binding.getSongModel().setPlaying(mediaService.getMediaPlayer().isPlaying());
+                }
+                mSeekbarUpdateHandler.postDelayed(this, 50);
+            }
+        };
+        mSeekbarUpdateHandler.post(mUpdateSeekbar);
+    }
+
+    private void updateSongModel() {
+        if (binding.getSongModel() != null) {
+            binding.getSongModel().setSong(mediaService.getCurrentSong(), mediaService.getMediaPlayer());
+        } else {
+            binding.setSongModel(new SongModel(mediaService.getCurrentSong(), mediaService.getMediaPlayer()));
+        }
+    }
+
     private void doTasks() {
-        if (!mBound) return;
+        //mediaService's tasks
+        mediaService.scanSongFromStorage();
 
         //recyclerView's tasks
-        adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService);
+        adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService, binding);
         recyclerView.setAdapter(adapter);
 
         //setOnClickListener's tasks

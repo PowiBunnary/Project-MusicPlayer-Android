@@ -8,19 +8,23 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.powimusicplayer.R;
+import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
 
+import Binders.SongModel;
 import DTOs.Song;
 import Helpers.Converter;
 
 public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapter.RecyclerViewHolder> {
     private ArrayList<Song> songs;
     MediaService mediaService;
+    private ActivityMainBinding binding;
 
-    public SongListViewAdapter(ArrayList<Song> songs, MediaService mediaService) {
+    public SongListViewAdapter(ArrayList<Song> songs, MediaService mediaService, ActivityMainBinding binding) {
         this.songs = songs;
         this.mediaService = mediaService;
+        this.binding = binding;
     }
 
     @Override
@@ -43,6 +47,7 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
             @Override
             public void onClick(View v) {
                 mediaService.goToSong(position);
+                updateSongModel();
                 notifyDataSetChanged();
             }
         });
@@ -63,6 +68,14 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
             super(itemView);
             title = itemView.findViewById(R.id.songTitle);
             duration = itemView.findViewById(R.id.duration);
+        }
+    }
+
+    private void updateSongModel() {
+        if (binding.getSongModel() != null) {
+            binding.getSongModel().setSong(mediaService.getCurrentSong(), mediaService.getMediaPlayer());
+        } else {
+            binding.setSongModel(new SongModel(mediaService.getCurrentSong(), mediaService.getMediaPlayer()));
         }
     }
 }

@@ -6,22 +6,17 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-
-import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import Binders.SongModel;
 import DTOs.Song;
 
 public class MediaService extends Service {
-    private MediaPlayer mediaPlayer;
+    private final MediaPlayer mediaPlayer = new MediaPlayer();
     private int position = 0;
     private ArrayList<Song> songs;
-    private ActivityMainBinding binding;
     private final IBinder binder = new LocalBinder();
 
     public class LocalBinder extends Binder {
@@ -62,29 +57,21 @@ public class MediaService extends Service {
         return fileList;
     }
 
-    public void setup(@NonNull ActivityMainBinding binding, @NonNull MediaPlayer mediaPlayer) {
-        this.binding = binding;
-        this.mediaPlayer = mediaPlayer;
-        prepareSong();
-    }
-
     public ArrayList<Song> getSongs() {
         return songs;
     }
 
-    private void prepareSong() {
+    public void scanSongFromStorage() {
         songs =  getPlayList(Environment.getExternalStorageDirectory().toString() + "@Download".replace('@','/'));
+    }
+
+    private void prepareSong() {
         if (songs.size() == 0) return;
         try {
             mediaPlayer.setDataSource(songs.get(position).getFile());
             mediaPlayer.prepare();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        if (binding.getSongModel() == null) {
-            binding.setSongModel(new SongModel(songs.get(position), mediaPlayer));
-        } else {
-            binding.getSongModel().setSong(songs.get(position), mediaPlayer);
         }
     }
 
@@ -124,6 +111,14 @@ public class MediaService extends Service {
         else {
             playSong();
         }
+    }
+
+    public Song getCurrentSong() {
+        return songs.get(position);
+    }
+
+    public MediaPlayer getMediaPlayer() {
+        return mediaPlayer;
     }
 
     public void nextSong() {
