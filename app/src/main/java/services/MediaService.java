@@ -7,7 +7,7 @@ import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
 
-import com.example.powimusicplayer.NotificationCallBack;
+import com.example.powimusicplayer.UpdateCallback;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class MediaService extends Service {
     private int position = 0;
     private ArrayList<Song> songs;
     private final IBinder binder = new LocalBinder();
-    NotificationCallBack callback;
+    UpdateCallback callback;
 
     public class LocalBinder extends Binder {
         public MediaService getService() {
@@ -90,6 +90,9 @@ public class MediaService extends Service {
                 try {
                     nextSong();
                     playSong();
+                    callback.updateNotification();
+                    callback.updateModel();
+                    callback.updateRecycler();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -173,7 +176,7 @@ public class MediaService extends Service {
         return position;
     }
 
-    public void setCallback(NotificationCallBack callback) {
+    public void setCallback(UpdateCallback callback) {
         this.callback = callback;
     }
 
@@ -194,6 +197,8 @@ public class MediaService extends Service {
                     throw new RuntimeException("Unhandled case");
             }
             callback.updateNotification();
+            callback.updateModel();
+            callback.updateRecycler();
         }
         return super.onStartCommand(intent, flags, startId);
     }

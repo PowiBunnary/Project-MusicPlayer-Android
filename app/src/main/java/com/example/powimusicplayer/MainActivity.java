@@ -35,7 +35,7 @@ import services.SongListViewAdapter;
 //nox_adb.exe connect 127.0.0.1:62001 -- use Nox emulator instead, remember to turn on Nox first.
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, NotificationCallBack {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, UpdateCallback {
     TextView error;
     ImageButton toggle, next, prev, stop;
     MediaService mediaService;
@@ -166,9 +166,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             default:
                 throw new RuntimeException("Unhandled case");
         }
-        updateSongModel();
+        updateModel();
         updateNotification();
-        adapter.notifyDataSetChanged();
+        updateRecycler();
     }
 
     @Override
@@ -197,14 +197,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mSeekbarUpdateHandler.post(mUpdateSeekbar);
     }
 
-    private void updateSongModel() {
-        if (binding.getSongModel() != null) {
-            binding.getSongModel().setSong(mediaService.getCurrentSong(), mediaService.getMediaPlayer());
-        } else {
-            binding.setSongModel(new SongModel(mediaService.getCurrentSong(), mediaService.getMediaPlayer()));
-        }
-    }
-
     private void doTasks() {
         //mediaService's tasks
         mediaService.scanSongFromStorage();
@@ -223,6 +215,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else {
             error.setText("No music found");
         }
+    }
+
+    @Override
+    public void updateModel() {
+        if (binding.getSongModel() != null) {
+            binding.getSongModel().setSong(mediaService.getCurrentSong(), mediaService.getMediaPlayer());
+        } else {
+            binding.setSongModel(new SongModel(mediaService.getCurrentSong(), mediaService.getMediaPlayer()));
+        }
+    }
+
+    @Override
+    public void updateRecycler() {
+        adapter.notifyDataSetChanged();
     }
 
     @Override
