@@ -8,23 +8,21 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.powimusicplayer.R;
-import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
 
-import Binders.SongModel;
 import DTOs.Song;
 import Helpers.Converter;
 
 public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapter.RecyclerViewHolder> {
     private ArrayList<Song> songs;
-    MediaService mediaService;
-    private ActivityMainBinding binding;
+    private MediaService mediaService;
+    private View.OnClickListener onActivityClickListener;
 
-    public SongListViewAdapter(ArrayList<Song> songs, MediaService mediaService, ActivityMainBinding binding) {
+    public SongListViewAdapter(ArrayList<Song> songs, MediaService mediaService, View.OnClickListener onActivityClickListener) {
         this.songs = songs;
         this.mediaService = mediaService;
-        this.binding = binding;
+        this.onActivityClickListener = onActivityClickListener;
     }
 
     @Override
@@ -46,8 +44,8 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mediaService.goToSong(position);
-                updateSongModel();
+                v.setTag(R.id.songListView, position);
+                onActivityClickListener.onClick(v);
                 notifyDataSetChanged();
             }
         });
@@ -68,14 +66,6 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
             super(itemView);
             title = itemView.findViewById(R.id.songTitle);
             duration = itemView.findViewById(R.id.duration);
-        }
-    }
-
-    private void updateSongModel() {
-        if (binding.getSongModel() != null) {
-            binding.getSongModel().setSong(mediaService.getCurrentSong(), mediaService.getMediaPlayer());
-        } else {
-            binding.setSongModel(new SongModel(mediaService.getCurrentSong(), mediaService.getMediaPlayer()));
         }
     }
 }
