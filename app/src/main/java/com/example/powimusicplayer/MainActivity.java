@@ -2,6 +2,8 @@ package com.example.powimusicplayer;
 
 import android.Manifest;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
@@ -16,7 +18,6 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ActivityMainBinding binding;
     boolean isBound = false;
 
-    NotificationManagerCompat notificationManager;
+    NotificationManager notificationManager;
     Notification musicNotification;
     public static final String CHANNEL_ID = "MUSIC_CHANNEL";
     public static final int MUSIC_ID = 0;
@@ -104,6 +105,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         musicNotification = builder
                             .setSmallIcon(R.drawable.logo)
                             .setCustomContentView(view)
+                            .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                            .setShowWhen(false)
                             .setOngoing(toggleIconId == R.drawable.ic_pause_button)
                             .build();
     }
@@ -112,7 +115,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-		notificationManager = NotificationManagerCompat.from(this);
+
+		notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		if (isAboveOreoApi()) {
+            notificationManager.createNotificationChannel(getNotificationChannel());
+        }
+
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         toggle = findViewById(R.id.ToggleButton);
@@ -138,6 +146,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
         syncSongModel();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private NotificationChannel getNotificationChannel() {
+        int importance = NotificationManager.IMPORTANCE_LOW;
+        NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, "MUSIC_CHANNEL", importance);
+        return notificationChannel;
+    }
+
+    private boolean isAboveOreoApi() {
+        return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O;
     }
 
     private boolean hasStoragePermission() {
@@ -225,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             next.setOnClickListener(this);
             prev.setOnClickListener(this);
             stop.setOnClickListener(this);
+            error.setText("");
         }
         else {
             error.setText("No music found");
