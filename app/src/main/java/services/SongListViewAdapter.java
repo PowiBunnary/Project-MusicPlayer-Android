@@ -33,7 +33,7 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
     }
 
     @Override
-    public void onBindViewHolder(RecyclerViewHolder holder, final int position) {
+    public void onBindViewHolder(final RecyclerViewHolder holder, int position) {
         holder.title.setText(songs.get(position).getName());
         holder.duration.setText(Converter.ToTimeString(songs.get(position).getDuration()));
         if(position == mediaService.getPosition()) {
@@ -44,7 +44,7 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                v.setTag(R.id.songListView, position);
+                v.setTag(R.id.songListView, holder.getAdapterPosition());
                 onActivityClickListener.onClick(v);
                 notifyDataSetChanged();
             }

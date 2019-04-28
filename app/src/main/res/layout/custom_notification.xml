@@ -1,49 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="64dp"
     android:orientation="horizontal"
-    android:gravity="clip_horizontal"
-    style="@android:style/TextAppearance.StatusBar.EventContent">
+    android:gravity="clip_horizontal">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="44dp"
         android:layout_height="match_parent"
-        android:orientation="vertical"
+        android:layout_marginRight="20dp"
         android:layout_weight="6"
-        android:layout_marginRight="30dp"
-        android:weightSum="4"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:weightSum="4">
 
         <TextView
             android:id="@+id/notification_song_title"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:singleLine="true"
             style="@style/TextAppearance.Compat.Notification.Title"
             android:text="Song title" />
 
         <TextView
             android:id="@+id/notification_song_author"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:singleLine="true"
             style="@style/TextAppearance.Compat.Notification.Info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
             android:text="Song author" />
-
     </LinearLayout>
 
     <ImageButton
         android:id="@+id/notification_back"
         android:layout_width="0dp"
         android:layout_height="match_parent"
+        android:layout_marginRight="30dp"
         android:layout_weight="1"
         android:background="@android:color/transparent"
         android:scaleType="fitCenter"
-        android:layout_marginRight="30dp"
         android:src="@drawable/ic_back_button" />
 
     <ImageButton
