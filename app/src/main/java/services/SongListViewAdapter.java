@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.powimusicplayer.R;
@@ -12,7 +13,6 @@ import com.example.powimusicplayer.R;
 import java.util.ArrayList;
 
 import DTOs.Song;
-import Helpers.Converter;
 
 public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapter.RecyclerViewHolder> {
     private ArrayList<Song> songs;
@@ -35,7 +35,9 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
     @Override
     public void onBindViewHolder(final RecyclerViewHolder holder, int position) {
         holder.title.setText(songs.get(position).getName());
-        holder.duration.setText(Converter.ToTimeString(songs.get(position).getDuration()));
+        holder.artistAndDuration.setText(songs.get(position).getArtistAndDurationTimeStr());
+        if (songs.get(position).getAlbumArt() != null)
+            holder.albumArt.setImageBitmap(songs.get(position).getAlbumArt());
         if(position == mediaService.getPosition()) {
             holder.title.setTextColor(Color.parseColor("#42cef4"));
         }
@@ -58,14 +60,16 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
     }
 
 
-    public class RecyclerViewHolder extends RecyclerView.ViewHolder {
+    class RecyclerViewHolder extends RecyclerView.ViewHolder {
         TextView title;
-        TextView duration;
+        TextView artistAndDuration;
+        ImageView albumArt;
 
-        public RecyclerViewHolder(View itemView) {
+        RecyclerViewHolder(View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.songTitle);
-            duration = itemView.findViewById(R.id.duration);
+            artistAndDuration = itemView.findViewById(R.id.artistAndDuration);
+            albumArt = itemView.findViewById(R.id.albumArt);
         }
     }
 }

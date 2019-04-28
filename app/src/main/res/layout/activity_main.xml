@@ -32,7 +32,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginRight="40dp"
-                android:background="@{songModel.isPlaying ? @drawable/ic_pause_button : @drawable/ic_play_button }" />
+            android:background="@{songModel.isPlaying ? @drawable/ic_pause_button : @drawable/ic_play_button }" />
 
         <ImageButton
             android:id="@+id/StopButton"
@@ -99,6 +99,7 @@
             android:scrollbars="vertical"
             android:id="@+id/songListView"
             android:layout_alignBottom="@id/CurrentTitle"
+            android:layout_marginTop="15dp"
             android:layout_marginBottom="32dp"
             />
 

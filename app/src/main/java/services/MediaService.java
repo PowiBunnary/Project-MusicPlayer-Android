@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Environment;
@@ -20,6 +21,7 @@ import DTOs.Song;
 
 public class MediaService extends Service {
     private final MediaPlayer mediaPlayer = new MediaPlayer();
+    private final MediaMetadataRetriever mediaRetriever = new MediaMetadataRetriever();
     private int position = 0;
     private ArrayList<Song> songs;
     private final IBinder binder = new LocalBinder();
@@ -44,11 +46,8 @@ public class MediaService extends Service {
                         break;
                     }
                 } else if (file.getName().endsWith(".mp3")) {
-                    String name = file.getName();
-                    if(name.length() > 4)
-                        name = name.substring(0, name.length() - 4);
-
-                    Song song = new Song(name,file.getAbsolutePath());
+                    String fileName = file.getName();
+                    Song song = new Song(file.getAbsolutePath(), fileName);
                     try {
                         mediaPlayer.setDataSource(song.getFile());
                         mediaPlayer.prepare();

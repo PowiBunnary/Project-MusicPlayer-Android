@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    private void createNotification(String songName, String songAuthor, int toggleIconId) {
+    private void createNotification(String songName, String songArtist, int toggleIconId) {
         Intent backIntent = new Intent(this, MediaService.class);
         backIntent.setAction("BACK");
         PendingIntent pIntent = PendingIntent.getService(
@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         RemoteViews view = new RemoteViews(getPackageName(), R.layout.custom_notification);
         view.setTextViewText(R.id.notification_song_title, songName);
-        view.setTextViewText(R.id.notification_song_author, songAuthor);
+        view.setTextViewText(R.id.notification_song_author, songArtist);
         view.setImageViewResource(R.id.notification_toggle, toggleIconId);
         view.setOnClickPendingIntent(R.id.notification_back, pIntent);
         view.setOnClickPendingIntent(R.id.notification_toggle, tIntent);
@@ -272,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void updateNotification() {
         createNotification(
                 mediaService.getCurrentSong().getName(),
-                mediaService.getCurrentSong().getName(),
+                mediaService.getCurrentSong().getArtist(),
                 mediaService.getMediaPlayer().isPlaying() ?
                         R.drawable.ic_pause_button :
                         R.drawable.ic_play_button);

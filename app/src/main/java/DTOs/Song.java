@@ -1,17 +1,32 @@
 package DTOs;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 
+import Helpers.Converter;
+
 public class Song {
+    private static final MediaMetadataRetriever mediaRetriever = new MediaMetadataRetriever();
+
     private String name;
+    private String artist;
+    private Bitmap albumArt;
     private String file;
     private int duration;
     private int currentPosition;
 
 
-    public Song(String name, String file) {
-        this.name = name;
+    public Song(String file, String fileName) {
         this.file = file;
+        mediaRetriever.setDataSource(file);
+        this.name = mediaRetriever.extractMetadata((MediaMetadataRetriever.METADATA_KEY_TITLE));
+        if (this.name.isEmpty()) this.name = fileName;
+        this.artist = mediaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        byte[] albumArtBytes = mediaRetriever.getEmbeddedPicture();
+        if (albumArtBytes != null)
+            this.albumArt = BitmapFactory.decodeByteArray(albumArtBytes, 0, albumArtBytes.length);
     }
 
     public String getName() {
@@ -33,6 +48,7 @@ public class Song {
     public int getDuration() {
         return duration;
     }
+
     public void setDuration(int duration) {
         this.duration = duration;
     }
@@ -48,5 +64,25 @@ public class Song {
     public void setDurationAndPosition(MediaPlayer mediaPlayer) {
         currentPosition = mediaPlayer.getCurrentPosition();
         duration = mediaPlayer.getDuration();
+    }
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public void setArtist(String artist) {
+        this.artist = artist;
+    }
+
+    public String getArtistAndDurationTimeStr() {
+        return artist + " - " + Converter.ToTimeString(duration);
+    }
+
+    public Bitmap getAlbumArt() {
+        return albumArt;
+    }
+
+    public void setAlbumArt(Bitmap albumArt) {
+        this.albumArt = albumArt;
     }
 }
