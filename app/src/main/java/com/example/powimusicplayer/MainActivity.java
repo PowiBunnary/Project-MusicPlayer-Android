@@ -101,11 +101,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         view.setOnClickPendingIntent(R.id.notification_toggle, tIntent);
         view.setOnClickPendingIntent(R.id.notification_next, nIntent);
 
+        RemoteViews expandView = new RemoteViews(getPackageName(), R.layout.custom_notification_expand);
+        expandView.setTextViewText(R.id.notification_song_title_expand, songName);
+        expandView.setTextViewText(R.id.notification_song_artist_expand, songArtist);
+        expandView.setImageViewResource(R.id.notification_toggle_expand, toggleIconId);
+        expandView.setOnClickPendingIntent(R.id.notification_back_expand, pIntent);
+        expandView.setOnClickPendingIntent(R.id.notification_toggle_expand, tIntent);
+        expandView.setOnClickPendingIntent(R.id.notification_next_expand, nIntent);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         musicNotification = builder
                             .setSmallIcon(R.drawable.logo)
-                            .setCustomContentView(view)
                             .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                            .setCustomContentView(view)
+                            .setCustomBigContentView(expandView)
                             .setShowWhen(false)
                             .setOngoing(toggleIconId == R.drawable.ic_pause_button)
                             .build();
