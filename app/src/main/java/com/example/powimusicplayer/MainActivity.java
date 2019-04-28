@@ -111,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .build();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -138,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerView.setLayoutManager(layoutManager);
 
         //Request Permission
-        if(!hasStoragePermission()) {
+        if(isAboveMarshmallowApi() && !hasStoragePermission()) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
         }
 
@@ -153,6 +152,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int importance = NotificationManager.IMPORTANCE_LOW;
         NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, "MUSIC_CHANNEL", importance);
         return notificationChannel;
+    }
+
+    private boolean isAboveMarshmallowApi() {
+        return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M;
     }
 
     private boolean isAboveOreoApi() {

@@ -16,7 +16,6 @@
 
         <TextView
             android:id="@+id/notification_song_title"
-            style="@style/TextAppearance.Compat.Notification.Title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:singleLine="true"
