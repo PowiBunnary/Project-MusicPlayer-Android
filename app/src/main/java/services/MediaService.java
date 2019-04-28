@@ -1,12 +1,15 @@
 package services;
 
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
 
+import com.example.powimusicplayer.MainActivity;
 import com.example.powimusicplayer.UpdateCallback;
 
 import java.io.File;
@@ -65,11 +68,14 @@ public class MediaService extends Service {
     }
 
     public void scanSongFromStorage() {
-        songs =  getPlayList(Environment.getExternalStorageDirectory().toString() + "@Download".replace('@','/'));
+        songs = getPlayList(Environment.getExternalStorageDirectory().toString() + "/Download");
+        if (songs.size() > 0) {
+            prepareSong();
+            callback.updateModel();
+        }
     }
 
     private void prepareSong() {
-        if (songs.size() == 0) return;
         try {
             mediaPlayer.setDataSource(songs.get(position).getFile());
             mediaPlayer.prepare();
@@ -206,5 +212,12 @@ public class MediaService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.cancel(MainActivity.MUSIC_ID);
     }
 }
