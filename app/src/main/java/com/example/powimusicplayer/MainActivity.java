@@ -43,11 +43,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     RecyclerView.Adapter adapter;
     RecyclerView.LayoutManager layoutManager;
     ActivityMainBinding binding;
+    boolean isBound = false;
 
     NotificationManagerCompat notificationManager;
     Notification musicNotification;
-    public final String CHANNEL_ID = "MUSIC_CHANNEL";
-    public final int MUSIC_ID = 0;
+    public static final String CHANNEL_ID = "MUSIC_CHANNEL";
+    public static final int MUSIC_ID = 0;
 
     private ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -56,11 +57,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             MediaService.LocalBinder binder = (MediaService.LocalBinder) service;
             mediaService = binder.getService();
             mediaService.setCallback(MainActivity.this);
-            doTasks();
+            isBound = true;
+            if (hasStoragePermission()) doTasks();
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName arg0) {}
+        public void onServiceDisconnected(ComponentName arg0) {
+            isBound = false;
+        }
     };
 
     private void createNotification(String songName, String songAuthor, int toggleIconId) {
@@ -104,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .build();
     }
 
-	@RequiresApi(api = Build.VERSION_CODES.M)
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -126,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerView.setLayoutManager(layoutManager);
 
         //Request Permission
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        if(!hasStoragePermission()) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},1);
         }
 
@@ -134,6 +138,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
         syncSongModel();
+    }
+
+    private boolean hasStoragePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override
@@ -145,6 +153,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v){
+        if (!isBound) return;
+
         int id = v.getId();
         switch (id) {
             case R.id.ToggleButton:
@@ -177,6 +187,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case 1:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     doTasks();
+                } else {
+                    error.setText("Can't read storage");
                 }
         }
     }
@@ -198,6 +210,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void doTasks() {
+        if (!isBound) return;
+
         //mediaService's tasks
         mediaService.scanSongFromStorage();
 
