@@ -22,7 +22,7 @@ public class Song {
         this.file = file;
         mediaRetriever.setDataSource(file);
         this.name = mediaRetriever.extractMetadata((MediaMetadataRetriever.METADATA_KEY_TITLE));
-        if (this.name.isEmpty()) this.name = fileName;
+        if (this.name == null) this.name = fileName;
         this.artist = mediaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
         byte[] albumArtBytes = mediaRetriever.getEmbeddedPicture();
         if (albumArtBytes != null)

@@ -30,6 +30,7 @@ import android.widget.TextView;
 import com.example.powimusicplayer.databinding.ActivityMainBinding;
 
 import Binders.SongModel;
+import DTOs.Song;
 import services.MediaService;
 import services.SongListViewAdapter;
 
@@ -64,11 +65,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
+            notificationManager.cancel(MUSIC_ID);
             isBound = false;
         }
     };
 
-    private void createNotification(String songName, String songArtist, int toggleIconId) {
+    private void createNotification(Song song, int toggleIconId) {
         Intent backIntent = new Intent(this, MediaService.class);
         backIntent.setAction("BACK");
         PendingIntent pIntent = PendingIntent.getService(
@@ -93,18 +95,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 nextIntent,
                 PendingIntent.FLAG_CANCEL_CURRENT);
 
+        Intent mainIntent = new Intent(this, MainActivity.class);
+        mainIntent.setAction(Intent.ACTION_MAIN);
+        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent mIntent = PendingIntent.getActivity(this, 0, mainIntent, 0);
+
         RemoteViews view = new RemoteViews(getPackageName(), R.layout.custom_notification);
-        view.setTextViewText(R.id.notification_song_title, songName);
-        view.setTextViewText(R.id.notification_song_author, songArtist);
+        view.setTextViewText(R.id.notification_song_title, song.getName());
+        view.setTextViewText(R.id.notification_song_author, song.getArtist());
         view.setImageViewResource(R.id.notification_toggle, toggleIconId);
         view.setOnClickPendingIntent(R.id.notification_back, pIntent);
         view.setOnClickPendingIntent(R.id.notification_toggle, tIntent);
         view.setOnClickPendingIntent(R.id.notification_next, nIntent);
 
         RemoteViews expandView = new RemoteViews(getPackageName(), R.layout.custom_notification_expand);
-        expandView.setTextViewText(R.id.notification_song_title_expand, songName);
-        expandView.setTextViewText(R.id.notification_song_artist_expand, songArtist);
+        expandView.setTextViewText(R.id.notification_song_title_expand, song.getName());
+        expandView.setTextViewText(R.id.notification_song_artist_expand, song.getArtist());
         expandView.setImageViewResource(R.id.notification_toggle_expand, toggleIconId);
+        if (song.getAlbumArt() != null)
+            expandView.setImageViewBitmap(R.id.notification_albumArt, song.getAlbumArt());
         expandView.setOnClickPendingIntent(R.id.notification_back_expand, pIntent);
         expandView.setOnClickPendingIntent(R.id.notification_toggle_expand, tIntent);
         expandView.setOnClickPendingIntent(R.id.notification_next_expand, nIntent);
@@ -115,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
                             .setCustomContentView(view)
                             .setCustomBigContentView(expandView)
+                            .setContentIntent(mIntent)
                             .setShowWhen(false)
                             .setOngoing(toggleIconId == R.drawable.ic_pause_button)
                             .build();
@@ -178,7 +189,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        notificationManager.cancel(MUSIC_ID);
         unbindService(connection);
     }
 
@@ -280,8 +290,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void updateNotification() {
         createNotification(
-                mediaService.getCurrentSong().getName(),
-                mediaService.getCurrentSong().getArtist(),
+                mediaService.getCurrentSong(),
                 mediaService.getMediaPlayer().isPlaying() ?
                         R.drawable.ic_pause_button :
                         R.drawable.ic_play_button);
