@@ -4,7 +4,6 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Environment;
@@ -21,7 +20,6 @@ import DTOs.Song;
 
 public class MediaService extends Service {
     private final MediaPlayer mediaPlayer = new MediaPlayer();
-    private final MediaMetadataRetriever mediaRetriever = new MediaMetadataRetriever();
     private int position = 0;
     private ArrayList<Song> songs;
     private final IBinder binder = new LocalBinder();
@@ -218,5 +216,6 @@ public class MediaService extends Service {
         super.onTaskRemoved(rootIntent);
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         manager.cancel(MainActivity.MUSIC_ID);
+        stopSelf();
     }
 }

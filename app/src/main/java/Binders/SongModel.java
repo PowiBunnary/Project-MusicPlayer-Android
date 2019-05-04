@@ -69,7 +69,10 @@ public class SongModel extends BaseObservable {
     }
 
     public void setCurrentPosition(MediaPlayer mediaPlayer) {
-        if (!isTouching() && song.getCurrentPosition() != mediaPlayer.getCurrentPosition()) {
+        if (!isTouching() &&
+            song.getCurrentPosition() <= mediaPlayer.getDuration() &&
+            song.getCurrentPosition() != mediaPlayer.getCurrentPosition())
+        {
             song.setCurrentPosition(mediaPlayer.getCurrentPosition());
             notifyPropertyChanged(BR.currentPosition);
         }
