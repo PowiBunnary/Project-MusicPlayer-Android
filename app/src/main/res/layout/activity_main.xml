@@ -87,6 +87,7 @@
         android:layout_height="wrap_content"
         android:text="@{songModel.name}"
         android:textColor="@color/primaryText"
+        android:singleLine="true"
         android:layout_alignBottom="@id/StartTimer"
         android:layout_marginBottom="24dp"
         android:layout_marginLeft="12dp"
@@ -98,9 +99,7 @@
             android:scrollbars="vertical"
             android:id="@+id/songListView"
             android:layout_alignBottom="@id/CurrentTitle"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="32dp"
-            />
+            android:layout_marginBottom="32dp" />
 
         <TextView
             android:layout_width="wrap_content"

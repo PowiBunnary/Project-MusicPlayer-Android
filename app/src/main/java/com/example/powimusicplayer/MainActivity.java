@@ -1,6 +1,7 @@
 package com.example.powimusicplayer;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -11,6 +12,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.databinding.DataBindingUtil;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -147,7 +149,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         prev = findViewById(R.id.PrevButton);
         stop = findViewById(R.id.StopButton);
         recyclerView = findViewById(R.id.songListView);
-
         error = findViewById(R.id.errorText);
 
         //RecyclerView
@@ -250,27 +251,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mSeekbarUpdateHandler.post(mUpdateSeekbar);
     }
 
+    @SuppressLint("StaticFieldLeak")
+    private class ScanOperation extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            mediaService.scanSongFromStorage();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            //recyclerView's tasks
+            adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService, MainActivity.this);
+            recyclerView.setAdapter(adapter);
+
+            //setOnClickListener's tasks
+            if(mediaService.getSongs().size() > 0) {
+                toggle.setOnClickListener(MainActivity.this);
+                next.setOnClickListener(MainActivity.this);
+                prev.setOnClickListener(MainActivity.this);
+                stop.setOnClickListener(MainActivity.this);
+                error.setText("");
+            }
+            else {
+                error.setText("No music found");
+            }
+        }
+    }
+
     private void doTasks() {
         if (!isBound) return;
 
-        //mediaService's tasks
-        mediaService.scanSongFromStorage();
+        error.setText("Loading...");
 
-        //recyclerView's tasks
-        adapter = new SongListViewAdapter(mediaService.getSongs(), mediaService, this);
-        recyclerView.setAdapter(adapter);
-
-        //setOnClickListener's tasks
-        if(mediaService.getSongs().size() > 0) {
-            toggle.setOnClickListener(this);
-            next.setOnClickListener(this);
-            prev.setOnClickListener(this);
-            stop.setOnClickListener(this);
-            error.setText("");
-        }
-        else {
-            error.setText("No music found");
-        }
+        //Async task
+        new ScanOperation().execute();
     }
 
     @Override
