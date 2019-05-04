@@ -6,6 +6,6 @@ Trương Trọng Thanh -
 Nguyễn Minh Trí -
 Vũ Lê Quang Trường -
 
-Mô tả: Đây là 1 music app player với các tính năng chính của 1 chương trình phát nhạc.
+Mô tả: Đây là 1 music app player với các tính năng chính của 1 chương trình phát nhạc. Bao gồm splash screen bên ngoài nhằm để cho các chức năng chính bên trong load xong. App này đọc external storage của điện thoại (trong file Download/) và sử dụng RecycleView để hiển thị danh sách các nhạc đã đọc được. Ngoài ra, app đã được optimize qua việc sử dụng Data Bindings và IntentService.
 
 Hướng dẫn: 
