@@ -1,0 +1,11 @@
+﻿Tên đề tài: Music Player App
+
+Các thành viên nhóm:
+Nguyễn Anh Khôi - 1651010083
+Trương Trọng Thanh -
+Nguyễn Minh Trí -
+Vũ Lê Quang Trường -
+
+Mô tả: Đây là 1 music app player với các tính năng chính của 1 chương trình phát nhạc.
+
+Hướng dẫn: 
