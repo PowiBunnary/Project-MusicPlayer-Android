@@ -34,6 +34,7 @@ import com.example.powimusicplayer.databinding.ActivityMainBinding;
 import Binders.SongModel;
 import DTOs.Song;
 import services.MediaService;
+import services.OnClearFromRecentService;
 import services.SongListViewAdapter;
 
 //nox_adb.exe connect 127.0.0.1:62001 -- use Nox emulator instead, remember to turn on Nox first.
@@ -45,7 +46,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     MediaService mediaService;
     RecyclerView recyclerView;
     RecyclerView.Adapter adapter;
-    RecyclerView.LayoutManager layoutManager;
     ActivityMainBinding binding;
     boolean isBound = false;
 
@@ -62,7 +62,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mediaService = binder.getService();
             mediaService.setCallback(MainActivity.this);
             isBound = true;
-            if (hasStoragePermission()) doTasks();
+            if (android.os.Build.VERSION.SDK_INT >= 16) {
+                if (hasStoragePermission()) doTasks();
+            } else {
+                doTasks();
+            }
         }
 
         @Override
@@ -73,29 +77,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
 
     private void createNotification(Song song, int toggleIconId) {
-        Intent backIntent = new Intent(this, MediaService.class);
-        backIntent.setAction("BACK");
-        PendingIntent pIntent = PendingIntent.getService(
-                this,
-                MUSIC_ID,
-                backIntent,
-                PendingIntent.FLAG_CANCEL_CURRENT);
-
-        Intent toggleIntent = new Intent(this, MediaService.class);
-        toggleIntent.setAction("TOGGLE");
-        PendingIntent tIntent = PendingIntent.getService(
-                this,
-                MUSIC_ID,
-                toggleIntent,
-                PendingIntent.FLAG_CANCEL_CURRENT);
-
-        Intent nextIntent = new Intent(this, MediaService.class);
-        nextIntent.setAction("NEXT");
-        PendingIntent nIntent = PendingIntent.getService(
-                this,
-                MUSIC_ID,
-                nextIntent,
-                PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent bIntent = createButtonPendingIntent("BACK");
+        PendingIntent tIntent = createButtonPendingIntent("TOGGLE");
+        PendingIntent nIntent = createButtonPendingIntent("NEXT");
 
         Intent mainIntent = new Intent(this, MainActivity.class);
         mainIntent.setAction(Intent.ACTION_MAIN);
@@ -103,23 +87,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent mIntent = PendingIntent.getActivity(this, 0, mainIntent, 0);
 
-        RemoteViews view = new RemoteViews(getPackageName(), R.layout.custom_notification);
-        view.setTextViewText(R.id.notification_song_title, song.getName());
-        view.setTextViewText(R.id.notification_song_author, song.getArtist());
-        view.setImageViewResource(R.id.notification_toggle, toggleIconId);
-        view.setOnClickPendingIntent(R.id.notification_back, pIntent);
-        view.setOnClickPendingIntent(R.id.notification_toggle, tIntent);
-        view.setOnClickPendingIntent(R.id.notification_next, nIntent);
-
-        RemoteViews expandView = new RemoteViews(getPackageName(), R.layout.custom_notification_expand);
-        expandView.setTextViewText(R.id.notification_song_title_expand, song.getName());
-        expandView.setTextViewText(R.id.notification_song_artist_expand, song.getArtist());
-        expandView.setImageViewResource(R.id.notification_toggle_expand, toggleIconId);
-        if (song.getAlbumArt() != null)
-            expandView.setImageViewBitmap(R.id.notification_albumArt, song.getAlbumArt());
-        expandView.setOnClickPendingIntent(R.id.notification_back_expand, pIntent);
-        expandView.setOnClickPendingIntent(R.id.notification_toggle_expand, tIntent);
-        expandView.setOnClickPendingIntent(R.id.notification_next_expand, nIntent);
+        RemoteViews view = createRemoteView(song, bIntent, tIntent, nIntent, toggleIconId);
+        RemoteViews expandView = createExpandRemoteView(song, bIntent, tIntent, nIntent, toggleIconId);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         musicNotification = builder
@@ -131,6 +100,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .setShowWhen(false)
                             .setOngoing(toggleIconId == R.drawable.ic_pause_button)
                             .build();
+    }
+
+    private PendingIntent createButtonPendingIntent(String action) {
+        Intent backIntent = new Intent(this, MediaService.class);
+        backIntent.setAction(action);
+        return PendingIntent.getService(
+                this,
+                MUSIC_ID,
+                backIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT);
+    }
+
+    private RemoteViews createRemoteView(Song song, PendingIntent backIntent, PendingIntent toggleIntent, PendingIntent nextIntent, int toggleIconId) {
+        RemoteViews view = new RemoteViews(getPackageName(), R.layout.custom_notification);
+        view.setTextViewText(R.id.notification_song_title, song.getName());
+        view.setTextViewText(R.id.notification_song_author, song.getArtist());
+        view.setImageViewResource(R.id.notification_toggle, toggleIconId);
+        view.setOnClickPendingIntent(R.id.notification_back, backIntent);
+        view.setOnClickPendingIntent(R.id.notification_toggle, toggleIntent);
+        view.setOnClickPendingIntent(R.id.notification_next, nextIntent);
+        return view;
+    }
+
+    private RemoteViews createExpandRemoteView(Song song, PendingIntent backIntent, PendingIntent toggleIntent, PendingIntent nextIntent, int toggleIconId) {
+        RemoteViews expandView = new RemoteViews(getPackageName(), R.layout.custom_notification_expand);
+        expandView.setTextViewText(R.id.notification_song_title_expand, song.getName());
+        expandView.setTextViewText(R.id.notification_song_artist_expand, song.getArtist());
+        expandView.setImageViewResource(R.id.notification_toggle_expand, toggleIconId);
+        if (song.getAlbumArt() != null)
+            expandView.setImageViewBitmap(R.id.notification_albumArt, song.getAlbumArt());
+        expandView.setOnClickPendingIntent(R.id.notification_back_expand, backIntent);
+        expandView.setOnClickPendingIntent(R.id.notification_toggle_expand, toggleIntent);
+        expandView.setOnClickPendingIntent(R.id.notification_next_expand, nextIntent);
+        return expandView;
     }
 
     @Override
@@ -153,9 +156,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //RecyclerView
         recyclerView.setHasFixedSize(true);
-
-        layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         //Request Permission
         if(isAboveMarshmallowApi() && !hasStoragePermission()) {
@@ -166,13 +167,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
 
         syncSongModel();
+        startService(new Intent(this, OnClearFromRecentService.class));
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private NotificationChannel getNotificationChannel() {
         int importance = NotificationManager.IMPORTANCE_LOW;
-        NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, "MUSIC_CHANNEL", importance);
-        return notificationChannel;
+        return new NotificationChannel(CHANNEL_ID, "MUSIC_CHANNEL", importance);
     }
 
     private boolean isAboveMarshmallowApi() {
@@ -183,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O;
     }
 
+    @RequiresApi(16)
     private boolean hasStoragePermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
@@ -190,6 +192,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.cancel(MainActivity.MUSIC_ID);
         unbindService(connection);
     }
 

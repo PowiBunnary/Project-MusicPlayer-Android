@@ -10,7 +10,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service android:enabled="true" android:stopWithTask="false" android:name="services.MediaService" />
+        <service android:name="services.MediaService" />
+        <service android:stopWithTask="false" android:name="services.OnClearFromRecentService" />
         <activity
             android:name=".SplashActivity"
             android:theme="@style/SplashTheme">
