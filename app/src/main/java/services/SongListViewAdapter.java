@@ -38,6 +38,8 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
         holder.artistAndDuration.setText(songs.get(position).getArtistAndDurationTimeStr());
         if (songs.get(position).getAlbumArt() != null)
             holder.albumArt.setImageBitmap(songs.get(position).getAlbumArt());
+        else
+            holder.albumArt.setImageResource(R.drawable.ic_no_image);
         if(position == mediaService.getPosition()) {
             holder.title.setTextColor(Color.parseColor("#42cef4"));
         }
@@ -48,7 +50,7 @@ public class SongListViewAdapter extends RecyclerView.Adapter<SongListViewAdapte
             public void onClick(View v) {
                 v.setTag(R.id.songListView, holder.getAdapterPosition());
                 onActivityClickListener.onClick(v);
-                notifyDataSetChanged();
+                //notifyDataSetChanged();
             }
         });
 
