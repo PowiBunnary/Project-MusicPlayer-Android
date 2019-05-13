@@ -27,6 +27,7 @@ public class Song {
         byte[] albumArtBytes = mediaRetriever.getEmbeddedPicture();
         if (albumArtBytes != null)
             this.albumArt = BitmapFactory.decodeByteArray(albumArtBytes, 0, albumArtBytes.length);
+        if (artist == null) this.artist = "Unknown Artist";
     }
 
     public String getName() {
