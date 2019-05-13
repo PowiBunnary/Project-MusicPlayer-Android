@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         musicNotification = builder
-                            .setSmallIcon(R.drawable.logo)
+                            .setSmallIcon(R.drawable.app_noti_icon)
                             .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
                             .setCustomContentView(view)
                             .setCustomBigContentView(expandView)
