@@ -1,7 +1,7 @@
 ﻿# Tên đề tài: Music Player App
 
 ## Các thành viên nhóm:
-- Nguyễn Anh Khôi - 1651010083
+- Nguyễn Anh Khôi - 1651010083 - Nhóm trưởng
 - Trương Trọng Thanh - 1651010128
 - Nguyễn Minh Trí - 1651010151
 - Vũ Lê Quang Trường - 1651010156
